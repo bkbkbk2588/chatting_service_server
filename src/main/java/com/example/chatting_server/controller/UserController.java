@@ -5,12 +5,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/test")
-public class TestController {
+@RequestMapping("/user")
+public class UserController {
+    // TODO 1. 로그 한곳에서 관리 2. 응답 vo 설정
 
-    @GetMapping(value = "/test")
-    public int getApplyList() {
-
+    @GetMapping("/test")
+    public int test() {
         return 1;
     }
 }

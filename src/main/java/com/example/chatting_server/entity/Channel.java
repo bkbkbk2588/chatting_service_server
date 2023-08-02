@@ -12,16 +12,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Channel {
-
-    /* TODO
-        방 생성 시간
-        방장 id
-        채팅 방 마지막 메세지
-        마지막 메세지 시간
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long channelSeq;
+
+    @Column(unique = true)
+    private String channelUrl;
+
+    @Column
+    private String channelName;
 
     @Column
     private LocalDateTime createTime;
@@ -29,4 +28,10 @@ public class Channel {
     @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "userId") // 외래 키 컬럼명 지정
     private User owner;
+
+    @Column
+    private String lastMessage;
+
+    @Column
+    private LocalDateTime lastMessageTime;
 }
