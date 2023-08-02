@@ -13,6 +13,7 @@ import javax.persistence.*;
 public class UserMetadata {
     @Id
     private long userSeq;
+
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     private User user;

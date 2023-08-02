@@ -4,10 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Builder
@@ -15,9 +13,20 @@ import javax.persistence.Id;
 @AllArgsConstructor
 public class Channel {
 
+    /* TODO
+        방 생성 시간
+        방장 id
+        채팅 방 마지막 메세지
+        마지막 메세지 시간
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long channelSeq;
 
+    @Column
+    private LocalDateTime createTime;
 
+    @ManyToOne
+    @JoinColumn(name = "owner_id", referencedColumnName = "userId") // 외래 키 컬럼명 지정
+    private User owner;
 }
