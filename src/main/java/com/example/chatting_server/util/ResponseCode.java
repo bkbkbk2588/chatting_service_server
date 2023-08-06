@@ -7,8 +7,7 @@ public enum ResponseCode {
     FAIL(500, "FAIL", "FAIL"),
 
     // API : 1000
-    NO_REQUIRED_PARAM(1000, "NO_REQUIRED_PARAM", "No Required Parameter"),
-    NO_REQUIRED_VALUE(1001, "NO_REQUIRED_VALUE", "No Required Parameter Value"),
+    NO_REQUIRED_PARAM(1001, "NO_REQUIRED_PARAM", "No Required Parameter"),
     INVALID_PARAM_TYPE(1002, "INVALID_PARAM_TYPE", "Invalid Parameter Type"),
     INVALID_PARAM_LENGTH(1003, "INVALID_PARAM_LENGTH", "Invalid Parameter Length"),
     INVALID_PARAM_VALUE(1004, "INVALID_PARAM_VALUE", "Invalid Parameter Value");

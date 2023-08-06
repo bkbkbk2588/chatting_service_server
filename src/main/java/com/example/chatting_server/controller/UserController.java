@@ -1,8 +1,10 @@
 package com.example.chatting_server.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.chatting_server.vo.request.CreateUserVo;
+import com.example.chatting_server.vo.response.ResponseVo;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/user")
@@ -12,5 +14,12 @@ public class UserController {
     @GetMapping("/test")
     public int test() {
         return 1;
+    }
+
+    @PostMapping("/sign-up")
+    public ResponseVo createUser(@Valid @RequestBody CreateUserVo createUserVo) {
+
+        System.out.println("@@@@@@@@@@@@@@");
+        return null;
     }
 }
