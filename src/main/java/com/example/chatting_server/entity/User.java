@@ -22,6 +22,9 @@ public class User {
     private String password;
 
     @Column
+    private String phoneNumber;
+
+    @Column
     private String nickName;
 
     // 0 : 정상, 1 : 정지, 2 : 휴먼상태

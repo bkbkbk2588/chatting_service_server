@@ -10,8 +10,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-import static com.example.chatting_server.util.ResponseCode.NO_REQUIRED_PARAM;
-
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
@@ -37,5 +35,10 @@ public class UserController {
         ResponseVo response = userService.createUser(createUserVo);
 
         return response;
+    }
+
+    @PostMapping("/id")
+    public ResponseVo getUserId() {
+        return null;
     }
 }

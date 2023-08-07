@@ -6,6 +6,7 @@ import com.example.chatting_server.service.UserService;
 import com.example.chatting_server.vo.request.CreateUserVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import lombok.RequiredArgsConstructor;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,6 @@ public class UserServiceImpl implements UserService {
         ResponseVo response;
         User user = userRepository.findFirstByUserId(createUserVo.getId());
 
-        // TODO 비밀번호 암호화 추가
         // 유저 존재 체크
         if (user != null) {
             response = ResponseVo.builder()
@@ -55,10 +55,13 @@ public class UserServiceImpl implements UserService {
                     .message(ALREADY_EXIST_ID.getMessage())
                     .build();
         } else {
+            String hashedPassword = BCrypt.hashpw(createUserVo.getPw(), BCrypt.gensalt());
+
             User createUser = User.builder()
                     .userId(createUserVo.getId())
-                    .password(createUserVo.getPw())
+                    .password(hashedPassword)
                     .nickName(createUserVo.getNickName())
+                    .phoneNumber(createUserVo.getPhoneNumber())
                     .userStatus(0)
                     .build();
 

@@ -7,11 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.persistence.RollbackException;
 import java.util.List;
+import java.util.Objects;
 
 import static com.example.chatting_server.util.ResponseCode.*;
 
@@ -20,7 +22,7 @@ import static com.example.chatting_server.util.ResponseCode.*;
 public class GlobalExceptionHandler {
     private final String NOT_BLANK = "NotBlank";
     private final String NULL = "NotNull";
-
+    private final String PATTERN = "Pattern";
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ResponseVo> handleValidationException(BindException ex) {
@@ -30,12 +32,12 @@ public class GlobalExceptionHandler {
 
         FieldError fieldError = ex.getFieldError();
 
-        if (fieldError.getCode().equals(NOT_BLANK)) {
+        if (Objects.equals(fieldError.getCode(), NOT_BLANK) || Objects.equals(fieldError.getCode(), PATTERN)) {
             responseVo = ResponseVo.builder()
                     .code(INVALID_PARAM_VALUE.getCode())
                     .message(INVALID_PARAM_VALUE.getMessage() + " (" + fieldError.getField() + ")")
                     .build();
-        } else if (fieldError.getCode().equals(NULL)) {
+        } else if (Objects.equals(fieldError.getCode(), NULL)) {
             responseVo = ResponseVo.builder()
                     .code(NO_REQUIRED_PARAM.getCode())
                     .message(NO_REQUIRED_PARAM.getMessage() + " (" + fieldError.getField() + ")")
@@ -72,6 +74,18 @@ public class GlobalExceptionHandler {
         ResponseVo responseVo = ResponseVo.builder()
                 .code(DB_COMMIT_FAIL.getCode())
                 .message(DB_COMMIT_FAIL.getMessage())
+                .build();
+
+        return ResponseEntity.badRequest().body(responseVo);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ResponseVo> handleRMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
+        log.error("MissingServletRequestParameterException Error");
+
+        ResponseVo responseVo = ResponseVo.builder()
+                .code(NO_REQUIRED_PARAM.getCode())
+                .message(NO_REQUIRED_PARAM.getMessage() + " (" + ex.getParameterName() + ")")
                 .build();
 
         return ResponseEntity.badRequest().body(responseVo);
