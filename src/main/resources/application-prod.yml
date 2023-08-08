@@ -25,3 +25,14 @@ spring:
       use_sql_comments: true
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+  redis:
+    host: ip
+    port: 1
+    password: 1
+
+
+#JWT config
+jwt:
+  secret: 1e73a29332e421d35af5f70078f67d8e89690a9690308bde5abac2e5a109eb435196f9b19a157857d7506d7fa97417348d2fb38285aaf212a92b40c0e4d7be78
+  accessToken-validity-in-seconds: 43200000
+  refreshToken-validity-in-seconds: 2592000000

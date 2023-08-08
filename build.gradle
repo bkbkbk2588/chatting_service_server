@@ -36,6 +36,17 @@ dependencies {
     // encryption
     implementation 'org.mindrot:jbcrypt:0.4'
 
+    //redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    //security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
     // ETC
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

@@ -2,6 +2,9 @@ package com.example.chatting_server.controller;
 
 import com.example.chatting_server.service.UserService;
 import com.example.chatting_server.vo.request.CreateUserVo;
+import com.example.chatting_server.vo.request.FindUserIdVo;
+import com.example.chatting_server.vo.request.LoginVo;
+import com.example.chatting_server.vo.request.UpdatePasswordVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +21,21 @@ public class UserController {
     final UserService userService;
 
     /**
+     * * 로그인
+     */
+    @PostMapping("/login")
+    public ResponseVo login(@Valid @RequestBody LoginVo loginVo) {
+        userService.login(loginVo);
+        return null;
+    }
+
+    /**
      * * ID 중복확인
      */
     @GetMapping("/check-id")
     public ResponseVo getUserIdValidate(@RequestParam @NotNull @NotBlank String userId) {
-        ResponseVo response = userService.getUserIdValidate(userId);
 
-        return response;
+        return userService.getUserIdValidate(userId);
     }
 
     /**
@@ -32,13 +43,31 @@ public class UserController {
      */
     @PostMapping("/sign-up")
     public ResponseVo createUser(@Valid @RequestBody CreateUserVo createUserVo) {
-        ResponseVo response = userService.createUser(createUserVo);
 
-        return response;
+        return userService.createUser(createUserVo);
     }
 
+    /**
+     * * ID 찾기
+     */
     @PostMapping("/id")
-    public ResponseVo getUserId() {
+    public ResponseVo getUserId(@Valid @RequestBody FindUserIdVo findUserIdVo) {
+
+        return userService.getUserId(findUserIdVo);
+    }
+
+    /**
+     * * 비밀번호 수정(찾기)
+     */
+    @PutMapping("/pwd")
+    public ResponseVo updatePassword(@Valid @RequestBody UpdatePasswordVo updatePasswordVo) {
+
+        return userService.updatePassword(updatePasswordVo);
+    }
+
+    @GetMapping
+    public ResponseVo getUser() {
         return null;
+
     }
 }

@@ -4,6 +4,8 @@ public enum ResponseCode {
     SUCCESS(200, "SUCCESS", "SUCCESS"),
     NO_DATA(201, "NO_DATA", "NO_DATA"),
     NO_CONTENT(204, "NO_CONTENT", "No Content"),
+    UNAUTHORIZED(401, "Unauthorized", "Unauthorized"),
+    FORBIDDEN(403, "Forbidden", "Forbidden"),
     FAIL(500, "FAIL", "FAIL"),
 
     // API : 1000
@@ -14,7 +16,8 @@ public enum ResponseCode {
 
     // USER : 2000
     ALREADY_EXIST_ID(2000, "ALREADY_EXIST_ID", "Already Exist Id"),
-
+    NO_EXIST_USER_ID(2001, "NO_EXIST_USER_ID", "No Exist User Id"),
+    NO_EXIST_USER(2002, "NO_EXIST_USER", "No Exist User"),
 
     // DB : 7000
     DB_COMMIT_FAIL(7000, "DB_COMMIT_FAIL", "Db Commit Fail");
