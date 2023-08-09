@@ -2,7 +2,6 @@ package com.example.chatting_server.security.config;
 
 import com.example.chatting_server.security.component.JwtAccessDeniedHandler;
 import com.example.chatting_server.security.component.JwtAuthenticationEntryPoint;
-import com.example.chatting_server.security.component.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -19,7 +18,7 @@ import org.springframework.security.web.savedrequest.NullRequestCache;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final TokenProvider tokenProvider;
+    private final JwtSecurityConfig jwtSecurityConfig;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
@@ -57,11 +56,13 @@ public class SecurityConfig {
                 .antMatchers("/user/id").permitAll()
                 .antMatchers("/user/pwd").permitAll()
                 .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/logout").permitAll()
+                .antMatchers("/user/refresh").permitAll()
                 .anyRequest().authenticated()
 
                 /** JwtSecurityConfig 적용 */
                 .and()
-                .apply(new JwtSecurityConfig(tokenProvider))
+                .apply(jwtSecurityConfig)
 
                 .and()
                 .requestCache()

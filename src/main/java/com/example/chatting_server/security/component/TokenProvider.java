@@ -94,6 +94,33 @@ public class TokenProvider implements InitializingBean {
 
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }
+    /**
+     * * 남은 유효기간 조회
+     */
+    public long getExpireSeconds(String bearerToken) {
+        String token = bearerToken;
+
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            token = bearerToken.substring(7);
+        }
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        long currentTimeMillis = System.currentTimeMillis();
+
+        // 토큰의 만료 시간 (exp 클레임 값)
+        long expirationMillis = claims.getExpiration().getTime();
+
+        // 남은 유효기간 계산 (밀리초 단위)
+        long remainingTimeMillis = expirationMillis - currentTimeMillis;
+
+        // 남은 유효기간을 초 단위로 변환
+        return remainingTimeMillis / 1000;
+    }
 
     /**
      * access token 유효성 검증

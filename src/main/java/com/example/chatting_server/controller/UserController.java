@@ -7,6 +7,7 @@ import com.example.chatting_server.vo.request.LoginVo;
 import com.example.chatting_server.vo.request.UpdatePasswordVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -25,8 +26,24 @@ public class UserController {
      */
     @PostMapping("/login")
     public ResponseVo login(@Valid @RequestBody LoginVo loginVo) {
-        userService.login(loginVo);
-        return null;
+
+        return userService.login(loginVo);
+    }
+
+    /**
+     * * 로그아웃
+     */
+    @DeleteMapping("/logout")
+    public ResponseVo logout(@RequestHeader("Authorization") String accessToken, @RequestHeader("RefreshToken") String refreshToken) {
+        return userService.logout(accessToken, refreshToken);
+    }
+
+    /**
+     * * 로그아웃
+     */
+    @DeleteMapping("/refresh")
+    public ResponseVo updateToken(Authentication authentication) {
+        return userService.updateToken(authentication.getName());
     }
 
     /**

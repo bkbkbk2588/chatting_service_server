@@ -9,14 +9,20 @@ import com.example.chatting_server.vo.request.FindUserIdVo;
 import com.example.chatting_server.vo.request.LoginVo;
 import com.example.chatting_server.vo.request.UpdatePasswordVo;
 import com.example.chatting_server.vo.response.ResponseVo;
+import com.example.chatting_server.vo.response.TokenVo;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.example.chatting_server.util.ResponseCode.*;
 
@@ -24,21 +30,82 @@ import static com.example.chatting_server.util.ResponseCode.*;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    final String BLACK_LIST = "blackList";
+
     final UserRepository userRepository;
 
     final TokenProvider tokenProvider;
 
-    final RedisTemplate<String, Object> redisTemplate;
+    final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public ResponseVo login(LoginVo loginVo) {
-        Map<String, String> test = new HashMap<>();
+        User user = userRepository.findFirstByUserId(loginVo.getId());
+        ResponseVo responseVo;
 
-        test.put("1", "aaa");
+        // 로그인 성공할 경우
+        if (user != null && BCrypt.checkpw(loginVo.getPw(), user.getPassword())) {
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginVo.getId(), null, Collections.emptyList());
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken); // security context 저장
 
-        redisTemplate.opsForValue().set("test", test);
-        
-        return null;
+            responseVo = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .data(TokenVo.builder()
+                            .accessToken(tokenProvider.createAccessToken(authenticationToken))
+                            .refreshToken(tokenProvider.createRefreshToken(authenticationToken))
+                            .build())
+                    .build();
+
+        } else {
+            responseVo = ResponseVo.builder()
+                    .code(INCORRECT_ID_OR_PASSWORD.getCode())
+                    .message(INCORRECT_ID_OR_PASSWORD.getMessage())
+                    .build();
+        }
+
+        return responseVo;
+    }
+
+    @Override
+    public ResponseVo logout(String accessToken, String refreshToken) {
+        String access = accessToken,
+                refresh = refreshToken;
+
+        if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
+            access = accessToken.substring(7);
+        }
+
+        if (StringUtils.hasText(refreshToken) && refreshToken.startsWith("Bearer ")) {
+            refresh = refreshToken.substring(7);
+        }
+
+        long accessExpireSeconds = tokenProvider.getExpireSeconds(access),
+                refreshExpireSeconds = tokenProvider.getExpireSeconds(refresh);
+
+        redisTemplate.opsForValue().set(access, BLACK_LIST, accessExpireSeconds, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(refresh, BLACK_LIST, refreshExpireSeconds, TimeUnit.SECONDS);
+
+        return ResponseVo.builder()
+                .code(SUCCESS.getCode())
+                .message(SUCCESS.getMessage())
+                .build();
+    }
+
+    @Override
+    public ResponseVo updateToken(String userId) {
+        System.out.println("@@@@@@@@@@@@@@@@@@ " + userId);
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken); // security context 저장
+
+        return ResponseVo.builder()
+                .code(SUCCESS.getCode())
+                .message(SUCCESS.getMessage())
+                .data(TokenVo.builder()
+                        .accessToken(tokenProvider.createAccessToken(authenticationToken))
+                        .refreshToken(tokenProvider.createRefreshToken(authenticationToken))
+                        .build())
+                .build();
     }
 
     @Override
@@ -135,12 +202,12 @@ public class UserServiceImpl implements UserService {
             String newPassword = BCrypt.hashpw(updatePasswordVo.getNewPw(), BCrypt.gensalt());
 
             userRepository.save(User.builder()
-                            .userSeq(user.getUserSeq())
-                            .userId(user.getUserId())
-                            .password(newPassword)
-                            .phoneNumber(user.getPhoneNumber())
-                            .nickName(user.getNickName())
-                            .userStatus(user.getUserStatus())
+                    .userSeq(user.getUserSeq())
+                    .userId(user.getUserId())
+                    .password(newPassword)
+                    .phoneNumber(user.getPhoneNumber())
+                    .nickName(user.getNickName())
+                    .userStatus(user.getUserStatus())
                     .build());
 
             response = ResponseVo.builder()

@@ -8,8 +8,11 @@ import com.example.chatting_server.vo.response.ResponseVo;
 
 public interface UserService {
     ResponseVo login(LoginVo loginVo);
+    ResponseVo logout(String accessToken, String refreshToken);
+    ResponseVo updateToken(String userId);
     ResponseVo getUserIdValidate(String userId);
     ResponseVo createUser(CreateUserVo createUserVo);
     ResponseVo getUserId(FindUserIdVo findUserIdVo);
     ResponseVo updatePassword(UpdatePasswordVo updatePasswordVo);
+
 }
