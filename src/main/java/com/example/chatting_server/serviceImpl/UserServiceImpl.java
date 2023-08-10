@@ -13,6 +13,7 @@ import com.example.chatting_server.vo.request.UpdatePasswordVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import com.example.chatting_server.vo.response.TokenVo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.querydsl.core.Tuple;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -234,7 +235,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseVo getUser(String userId) {
-
         return null;
     }
 }

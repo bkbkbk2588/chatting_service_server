@@ -95,12 +95,6 @@ configurations {
     querydsl.extendsFrom compileClasspath
 }
 
-sourceSets {
-    main {
-        resources { srcDirs = ["$projectDir/src/main/resources"]}
-    }
-}
-
 tasks.named('test') {
     useJUnitPlatform()
 }
