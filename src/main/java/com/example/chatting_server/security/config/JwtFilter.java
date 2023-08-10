@@ -1,5 +1,6 @@
 package com.example.chatting_server.security.config;
 
+import com.example.chatting_server.exception.TokenInvalidException;
 import com.example.chatting_server.security.component.TokenProvider;
 import com.example.chatting_server.util.ResponseCode;
 import com.example.chatting_server.vo.response.ResponseVo;
@@ -8,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,7 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import static com.example.chatting_server.util.ResponseCode.*;
+import static com.example.chatting_server.util.ResponseCode.INVALID_ACCESS_TOKEN;
+import static com.example.chatting_server.util.ResponseCode.INVALID_REFRESH_TOKEN;
 
 @RequiredArgsConstructor
 @Component
@@ -47,22 +48,23 @@ public class JwtFilter extends OncePerRequestFilter {
         String refreshToken = resolveToken(httpServletRequest, REFRESH_HEADER);
         String requestURI = httpServletRequest.getRequestURI();
 
-//        try {
+        try {
             switch (requestURI) {
-                // TODO 예외처리 던지기
                 case REFRESH_URL:
                     if (!(StringUtils.hasText(refreshToken) && tokenProvider.validateAccessToken(refreshToken) && redisTemplate.opsForValue().get(refreshToken) == null)) {
-                        validToken(response, INVALID_REFRESH_TOKEN);
+                        throw new TokenInvalidException(ResponseCode.INVALID_REFRESH_TOKEN);
+                    } else {
+                        Authentication authentication = tokenProvider.getAuthentication(refreshToken);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                     break;
                 case LOGOUT_URL:
                     if (!(StringUtils.hasText(refreshToken) && tokenProvider.validateAccessToken(refreshToken) && redisTemplate.opsForValue().get(refreshToken) == null)) {
-//                    throw new
-                        validToken(response, INVALID_REFRESH_TOKEN);
+                        throw new TokenInvalidException(INVALID_REFRESH_TOKEN);
                     }
 
                     if (!(StringUtils.hasText(accessToken) && tokenProvider.validateAccessToken(accessToken) && redisTemplate.opsForValue().get(accessToken) == null)) {
-                        validToken(response, INVALID_ACCESS_TOKEN);
+                        throw new TokenInvalidException(INVALID_ACCESS_TOKEN);
                     }
 
                     break;
@@ -80,25 +82,19 @@ public class JwtFilter extends OncePerRequestFilter {
                     break;
             }
             chain.doFilter(httpServletRequest, response);
-//        } catch ()
+        } catch (TokenInvalidException exception) {
+            PrintWriter writer = response.getWriter();
+            ResponseVo responseVo = ResponseVo.builder()
+                    .code(exception.getResponseCode().getCode())
+                    .message(exception.getResponseCode().getMessage())
+                    .build();
 
-    }
+            ObjectMapper objectMapper = new ObjectMapper();
+            String responseBody = objectMapper.writeValueAsString(responseVo);
 
-    /**
-     * * token 유효성 체크
-     */
-    private void validToken(HttpServletResponse response, ResponseCode responseCode) throws IOException {
-//        PrintWriter writer = response.getWriter();
-        ResponseVo responseVo = ResponseVo.builder()
-                .code(responseCode.getCode())
-                .message(responseCode.getMessage())
-                .build();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String responseBody = objectMapper.writeValueAsString(responseVo);
-
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-//        writer.write(responseBody);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            writer.write(responseBody);
+        }
     }
 
     /**

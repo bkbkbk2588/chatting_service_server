@@ -39,11 +39,11 @@ public class UserController {
     }
 
     /**
-     * * 로그아웃
+     * * 토큰 재발급
      */
-    @DeleteMapping("/refresh")
-    public ResponseVo updateToken(Authentication authentication) {
-        return userService.updateToken(authentication.getName());
+    @PostMapping("/refresh")
+    public ResponseVo updateToken(Authentication authentication, @RequestHeader("RefreshToken") String refreshToken) {
+        return userService.updateToken(authentication.getName(), refreshToken);
     }
 
     /**
@@ -82,9 +82,11 @@ public class UserController {
         return userService.updatePassword(updatePasswordVo);
     }
 
+    /**
+     * * 내 정보 조회
+     */
     @GetMapping
-    public ResponseVo getUser() {
-        return null;
-
+    public ResponseVo getUser(Authentication authentication) {
+        return userService.getUser(authentication.getName());
     }
 }

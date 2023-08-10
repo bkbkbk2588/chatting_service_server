@@ -1,6 +1,8 @@
 package com.example.chatting_server.serviceImpl;
 
 import com.example.chatting_server.entity.User;
+import com.example.chatting_server.entity.UserMetadata;
+import com.example.chatting_server.repository.UserMetaDataRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.security.component.TokenProvider;
 import com.example.chatting_server.service.UserService;
@@ -10,6 +12,7 @@ import com.example.chatting_server.vo.request.LoginVo;
 import com.example.chatting_server.vo.request.UpdatePasswordVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import com.example.chatting_server.vo.response.TokenVo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,9 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.chatting_server.util.ResponseCode.*;
@@ -33,6 +34,8 @@ public class UserServiceImpl implements UserService {
     final String BLACK_LIST = "blackList";
 
     final UserRepository userRepository;
+
+    final UserMetaDataRepository userMetaDataRepository;
 
     final TokenProvider tokenProvider;
 
@@ -83,6 +86,7 @@ public class UserServiceImpl implements UserService {
         long accessExpireSeconds = tokenProvider.getExpireSeconds(access),
                 refreshExpireSeconds = tokenProvider.getExpireSeconds(refresh);
 
+        // 기존 토큰 블랙리스트 등록
         redisTemplate.opsForValue().set(access, BLACK_LIST, accessExpireSeconds, TimeUnit.SECONDS);
         redisTemplate.opsForValue().set(refresh, BLACK_LIST, refreshExpireSeconds, TimeUnit.SECONDS);
 
@@ -93,10 +97,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseVo updateToken(String userId) {
-        System.out.println("@@@@@@@@@@@@@@@@@@ " + userId);
+    public ResponseVo updateToken(String userId, String refreshToken) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(authenticationToken); // security context 저장
+
+        String refresh = refreshToken;
+
+        if (StringUtils.hasText(refreshToken) && refreshToken.startsWith("Bearer ")) {
+            refresh = refreshToken.substring(7);
+        }
+
+        long refreshExpireSeconds = tokenProvider.getExpireSeconds(refresh);
+
+        // 기존 refresh 토큰 블랙리스트 등록
+        redisTemplate.opsForValue().set(refresh, BLACK_LIST, refreshExpireSeconds, TimeUnit.SECONDS);
 
         return ResponseVo.builder()
                 .code(SUCCESS.getCode())
@@ -216,5 +230,11 @@ public class UserServiceImpl implements UserService {
                     .build();
         }
         return response;
+    }
+
+    @Override
+    public ResponseVo getUser(String userId) {
+
+        return null;
     }
 }
