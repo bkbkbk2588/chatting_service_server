@@ -1,9 +1,6 @@
 package com.example.chatting_server.service;
 
-import com.example.chatting_server.vo.request.CreateUserVo;
-import com.example.chatting_server.vo.request.FindUserIdVo;
-import com.example.chatting_server.vo.request.LoginVo;
-import com.example.chatting_server.vo.request.UpdatePasswordVo;
+import com.example.chatting_server.vo.request.*;
 import com.example.chatting_server.vo.response.ResponseVo;
 
 public interface UserService {
@@ -15,4 +12,6 @@ public interface UserService {
     ResponseVo getUserId(FindUserIdVo findUserIdVo);
     ResponseVo updatePassword(UpdatePasswordVo updatePasswordVo);
     ResponseVo getUser(String userId);
+    ResponseVo updateUser(UpdateUserVo updateUserVo, String userId);
+    ResponseVo deleteUser(String userId);
 }

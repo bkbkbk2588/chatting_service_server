@@ -1,5 +1,7 @@
 package com.example.chatting_server.customRepository;
 
-public interface CustomUserMetaDataRepository {
+import com.example.chatting_server.entity.UserMetadata;
 
+public interface CustomUserMetaDataRepository {
+    Long findMetadataByUserId(String userId);
 }

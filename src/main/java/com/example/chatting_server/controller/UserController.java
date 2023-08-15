@@ -1,10 +1,7 @@
 package com.example.chatting_server.controller;
 
 import com.example.chatting_server.service.UserService;
-import com.example.chatting_server.vo.request.CreateUserVo;
-import com.example.chatting_server.vo.request.FindUserIdVo;
-import com.example.chatting_server.vo.request.LoginVo;
-import com.example.chatting_server.vo.request.UpdatePasswordVo;
+import com.example.chatting_server.vo.request.*;
 import com.example.chatting_server.vo.response.ResponseVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -88,5 +85,23 @@ public class UserController {
     @GetMapping
     public ResponseVo getUser(Authentication authentication) {
         return userService.getUser(authentication.getName());
+    }
+
+    /**
+     * * 내 회원 정보 수정
+     */
+    @PutMapping
+    public ResponseVo updateUser(@Valid @RequestBody UpdateUserVo updateUserVo, Authentication authentication) {
+
+        return userService.updateUser(updateUserVo, authentication.getName());
+    }
+
+    /**
+     * * 회원 탈퇴
+     */
+    @DeleteMapping
+    public ResponseVo deleteUser(Authentication authentication) {
+
+        return userService.deleteUser(authentication.getName());
     }
 }

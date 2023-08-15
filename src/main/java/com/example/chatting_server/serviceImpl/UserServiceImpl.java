@@ -6,12 +6,10 @@ import com.example.chatting_server.repository.UserMetaDataRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.security.component.TokenProvider;
 import com.example.chatting_server.service.UserService;
-import com.example.chatting_server.vo.request.CreateUserVo;
-import com.example.chatting_server.vo.request.FindUserIdVo;
-import com.example.chatting_server.vo.request.LoginVo;
-import com.example.chatting_server.vo.request.UpdatePasswordVo;
+import com.example.chatting_server.vo.request.*;
 import com.example.chatting_server.vo.response.ResponseVo;
 import com.example.chatting_server.vo.response.TokenVo;
+import com.example.chatting_server.vo.response.UserInfoVo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.Tuple;
 import lombok.RequiredArgsConstructor;
@@ -235,6 +233,104 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseVo getUser(String userId) {
-        return null;
+        ResponseVo responseVo;
+        UserInfoVo userInfo = userRepository.findByUserInfo(userId);
+
+        if (userInfo == null) {
+            responseVo = ResponseVo.builder()
+                    .code(NO_EXIST_USER.getCode())
+                    .message(NO_EXIST_USER.getMessage())
+                    .build();
+        } else {
+            responseVo = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .data(userInfo)
+                    .build();
+        }
+
+        return responseVo;
+    }
+
+    @Override
+    @Transactional
+    public ResponseVo updateUser(UpdateUserVo updateUserVo, String userId) {
+        ResponseVo response;
+        User user = userRepository.findFirstByUserId(userId);
+
+        if (user == null) {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_USER.getCode())
+                    .message(NO_EXIST_USER.getMessage())
+                    .build();
+        } else {
+            String updateNickName = updateUserVo.getNickName(),
+                    updatePhoneNumber = updateUserVo.getPhoneNumber();
+
+            if (updateNickName == null || updateNickName.isBlank()) {
+                updateNickName = user.getNickName();
+            }
+
+            if (updatePhoneNumber == null || updatePhoneNumber.isBlank()) {
+                updatePhoneNumber = user.getPhoneNumber();
+            }
+
+            User createUser = User.builder()
+                    .userSeq(user.getUserSeq())
+                    .userId(userId)
+                    .password(user.getPassword())
+                    .nickName(updateNickName)
+                    .phoneNumber(updatePhoneNumber)
+                    .userStatus(user.getUserStatus())
+                    .build();
+
+            User updateUser = userRepository.save(createUser);
+
+            if (updateUser == null) {
+                response = ResponseVo.builder()
+                        .code(UPDATE_USER_FAIL.getCode())
+                        .message(UPDATE_USER_FAIL.getMessage())
+                        .build();
+            } else {
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .build();
+            }
+        }
+
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public ResponseVo deleteUser(String userId) {
+        ResponseVo response;
+        User user = userRepository.findFirstByUserId(userId);
+
+        // TODO metaData 조회 시 N+1 문제 해결 필요!!!
+
+        if (user == null) {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_USER.getCode())
+                    .message(NO_EXIST_USER.getMessage())
+                    .build();
+        } else {
+            Long userSeq = userMetaDataRepository.findMetadataByUserId(userId);
+
+            // 연관된 메타데이터 삭제
+            if (userSeq != null) {
+                userMetaDataRepository.deleteById(userSeq);
+            }
+
+            userRepository.delete(user);
+
+            response= ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .build();
+        }
+
+        return response;
     }
 }
