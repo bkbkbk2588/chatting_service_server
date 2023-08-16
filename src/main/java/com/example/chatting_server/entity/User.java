@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,9 +15,16 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Getter
 public class User implements Serializable {
+
+    // TODO 1. userSeq파라미터 명 변경 2. security에 userSeq 넣기 3. 엔티티 전체적으로 수정
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long userSeq;
+    @GeneratedValue(generator = "customIdGenerator")
+    @GenericGenerator(name = "customIdGenerator",
+            strategy = "com.example.chatting_server.config.CustomIdGenerator",
+            parameters = {
+                    @org.hibernate.annotations.Parameter(name = "prefix", value = "USER_")
+            })
+    private String userSeq;
 
     @Column(unique = true)
     private String userId;
