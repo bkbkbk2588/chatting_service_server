@@ -304,10 +304,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public ResponseVo deleteUser(String userPkId) {
-
-        // TODO redis 에 access token 등록
-
+    public ResponseVo deleteUser(String userPkId, String accessToken) {
         ResponseVo response;
         User user = userRepository.findById(userPkId).orElse(null);
 
@@ -325,6 +322,17 @@ public class UserServiceImpl implements UserService {
             }
 
             userRepository.delete(user);
+
+            String access = accessToken;
+
+            if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
+                access = accessToken.substring(7);
+            }
+
+            long accessExpireSeconds = tokenProvider.getExpireSeconds(access);
+
+            // 기존 토큰 블랙리스트 등록
+            redisTemplate.opsForValue().set(access, BLACK_LIST, accessExpireSeconds, TimeUnit.SECONDS);
 
             response= ResponseVo.builder()
                     .code(SUCCESS.getCode())

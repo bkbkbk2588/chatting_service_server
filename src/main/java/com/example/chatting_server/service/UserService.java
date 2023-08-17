@@ -13,5 +13,5 @@ public interface UserService {
     ResponseVo updatePassword(UpdatePasswordVo updatePasswordVo);
     ResponseVo getUser(String userId);
     ResponseVo updateUser(UpdateUserVo updateUserVo, String userId);
-    ResponseVo deleteUser(String userId);
+    ResponseVo deleteUser(String userId, String accessToken);
 }

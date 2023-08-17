@@ -100,8 +100,8 @@ public class UserController {
      * * 회원 탈퇴
      */
     @DeleteMapping
-    public ResponseVo deleteUser(Authentication authentication) {
+    public ResponseVo deleteUser(Authentication authentication, @RequestHeader("Authorization") String accessToken) {
 
-        return userService.deleteUser(String.valueOf(authentication.getCredentials()));
+        return userService.deleteUser(String.valueOf(authentication.getCredentials()), accessToken);
     }
 }
