@@ -104,4 +104,17 @@ public class UserController {
 
         return userService.deleteUser(String.valueOf(authentication.getCredentials()), accessToken);
     }
+
+    /**
+     * 사용자 메타데이터 등록
+     */
+    @PostMapping("/metadata")
+    public ResponseVo createMetadata(Authentication authentication, @Valid @RequestBody CreateUserMetadataVo createUserMetadataVo) {
+
+        // ObjectMapper를 사용하여 Map을 JSON 문자열로 변환
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String json = objectMapper.writeValueAsString(map);
+
+        return null;
+    }
 }
