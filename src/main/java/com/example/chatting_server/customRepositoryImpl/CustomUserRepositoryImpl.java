@@ -14,7 +14,7 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public UserInfoVo findByUserInfo(String userId) {
+    public UserInfoVo findByUserInfo(String id) {
         Tuple result = queryFactory
                 .select(user.userId,
                         user.nickName,
@@ -23,8 +23,8 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
                         userMetadata.metadata)
                 .from(user)
                 .leftJoin(userMetadata)
-                .on(user.userId.eq(userMetadata.user.userId))
-                .where(user.userId.eq(userId))
+                .on(user.id.eq(userMetadata.user.id))
+                .where(user.id.eq(id))
                 .fetchOne();
 
         if (result == null) {

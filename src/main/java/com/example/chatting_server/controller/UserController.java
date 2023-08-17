@@ -40,7 +40,7 @@ public class UserController {
      */
     @PostMapping("/refresh")
     public ResponseVo updateToken(Authentication authentication, @RequestHeader("RefreshToken") String refreshToken) {
-        return userService.updateToken(authentication.getName(), refreshToken);
+        return userService.updateToken(authentication.getName(), String.valueOf(authentication.getCredentials()), refreshToken);
     }
 
     /**
@@ -84,7 +84,7 @@ public class UserController {
      */
     @GetMapping
     public ResponseVo getUser(Authentication authentication) {
-        return userService.getUser(authentication.getName());
+        return userService.getUser(String.valueOf(authentication.getCredentials()));
     }
 
     /**
@@ -93,7 +93,7 @@ public class UserController {
     @PutMapping
     public ResponseVo updateUser(@Valid @RequestBody UpdateUserVo updateUserVo, Authentication authentication) {
 
-        return userService.updateUser(updateUserVo, authentication.getName());
+        return userService.updateUser(updateUserVo, String.valueOf(authentication.getCredentials()));
     }
 
     /**
@@ -102,6 +102,6 @@ public class UserController {
     @DeleteMapping
     public ResponseVo deleteUser(Authentication authentication) {
 
-        return userService.deleteUser(authentication.getName());
+        return userService.deleteUser(String.valueOf(authentication.getCredentials()));
     }
 }

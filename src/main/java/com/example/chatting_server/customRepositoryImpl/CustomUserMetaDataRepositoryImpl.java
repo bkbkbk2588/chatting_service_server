@@ -12,12 +12,9 @@ public class CustomUserMetaDataRepositoryImpl implements CustomUserMetaDataRepos
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Long findMetadataByUserId(String userId) {
-        Long userSeq = queryFactory.select(userMetadata.userSeq)
-                .from(userMetadata)
-                .where(userMetadata.user.userId.eq(userId))
+    public UserMetadata findMetadataByUserId(String userPkId) {
+        return queryFactory.selectFrom(userMetadata)
+                .where(userMetadata.user.id.eq(userPkId))
                 .fetchOne();
-
-        return userSeq;
     }
 }

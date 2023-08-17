@@ -20,6 +20,7 @@ import java.util.*;
 public class TokenProvider implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(TokenProvider.class);
     private static final String USER_ID_KEY = "userId";
+    private static final String ID = "id";
 
     private final String secret;
     private final long accessTokenValidTime;
@@ -44,13 +45,12 @@ public class TokenProvider implements InitializingBean {
      * access token 생성 algorithm
      */
     public String createAccessToken(Authentication authentication) {
-        String memberId = authentication.getName();
-
         long now = (new Date()).getTime();
         Date validity = new Date(now + this.accessTokenValidTime);
 
         Map<String, String> claim = new HashMap<>();
-        claim.put(USER_ID_KEY, memberId);
+        claim.put(USER_ID_KEY, authentication.getName());
+        claim.put(ID, String.valueOf(authentication.getCredentials()));
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
@@ -64,13 +64,12 @@ public class TokenProvider implements InitializingBean {
      * refresh token 생성 algorithm
      */
     public String createRefreshToken(Authentication authentication) {
-        String memberId = authentication.getName();
-
         long now = (new Date()).getTime();
         Date validity = new Date(now + this.refreshTokenValidTime);
 
         Map<String, String> claim = new HashMap<>();
-        claim.put(USER_ID_KEY, memberId);
+        claim.put(USER_ID_KEY, authentication.getName());
+        claim.put(ID, String.valueOf(authentication.getCredentials()));
 
         return Jwts.builder()
                 .setClaims(claim)
@@ -92,7 +91,7 @@ public class TokenProvider implements InitializingBean {
         List<GrantedAuthority> authorities = Collections.emptyList();
         User principal = new User(claims.get(USER_ID_KEY).toString(), claims.get(USER_ID_KEY).toString(), authorities);
 
-        return new UsernamePasswordAuthenticationToken(principal, null, authorities);
+        return new UsernamePasswordAuthenticationToken(principal, claims.get(ID), authorities);
     }
     /**
      * * 남은 유효기간 조회

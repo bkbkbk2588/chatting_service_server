@@ -3,6 +3,7 @@ package com.example.chatting_server.entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 
@@ -13,15 +14,19 @@ import javax.persistence.*;
 public class ChannelUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long channelUserSeq;
+    @GenericGenerator(name = "customIdGenerator",
+            strategy = "com.example.chatting_server.config.CustomIdGenerator",
+            parameters = {
+                    @org.hibernate.annotations.Parameter(name = "prefix", value = "CHANNEL_USER_")
+            })
+    private String id;
 
     @ManyToOne
-    @JoinColumn(name = "channel_url", referencedColumnName = "channelUrl")
+    @JoinColumn(name = "channel_pk_id", referencedColumnName = "id")
     private Channel channel;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    @JoinColumn(name = "user_pk_id", referencedColumnName = "id", unique = true)
     private User user;
 
     // (0 : 초대 상태 / 1 : 참여 상태)

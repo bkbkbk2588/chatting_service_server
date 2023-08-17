@@ -3,6 +3,7 @@ package com.example.chatting_server.entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -13,8 +14,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Channel {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long channelSeq;
+    @GeneratedValue(generator = "customIdGenerator")
+    @GenericGenerator(name = "customIdGenerator",
+            strategy = "com.example.chatting_server.config.CustomIdGenerator",
+            parameters = {
+                    @org.hibernate.annotations.Parameter(name = "prefix", value = "CHANNEL_")
+            })
+    private String id;
 
     @Column(unique = true)
     private String channelUrl;
@@ -26,7 +32,7 @@ public class Channel {
     private LocalDateTime createTime;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id", referencedColumnName = "userId") // 외래 키 컬럼명 지정
+    @JoinColumn(name = "owner_pk_id", referencedColumnName = "id") // 외래 키 컬럼명 지정
     private User owner;
 
     @Column

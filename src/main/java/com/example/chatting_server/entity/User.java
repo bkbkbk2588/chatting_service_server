@@ -16,7 +16,7 @@ import java.io.Serializable;
 @Getter
 public class User implements Serializable {
 
-    // TODO 1. userSeq파라미터 명 변경 2. security에 userSeq 넣기 3. 엔티티 전체적으로 수정
+    // TODO 2. security에 userSeq 넣기
     @Id
     @GeneratedValue(generator = "customIdGenerator")
     @GenericGenerator(name = "customIdGenerator",
@@ -24,7 +24,7 @@ public class User implements Serializable {
             parameters = {
                     @org.hibernate.annotations.Parameter(name = "prefix", value = "USER_")
             })
-    private String userSeq;
+    private String id;
 
     @Column(unique = true)
     private String userId;

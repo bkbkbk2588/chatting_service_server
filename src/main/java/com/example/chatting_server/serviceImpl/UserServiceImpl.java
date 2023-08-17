@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
         // 로그인 성공할 경우
         if (user != null && BCrypt.checkpw(loginVo.getPw(), user.getPassword())) {
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginVo.getId(), null, Collections.emptyList());
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginVo.getId(), user.getId(), Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authenticationToken); // security context 저장
 
             responseVo = ResponseVo.builder()
@@ -96,8 +96,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseVo updateToken(String userId, String refreshToken) {
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+    public ResponseVo updateToken(String userId, String id, String refreshToken) {
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userId, id, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(authenticationToken); // security context 저장
 
         String refresh = refreshToken;
@@ -215,7 +215,7 @@ public class UserServiceImpl implements UserService {
             String newPassword = BCrypt.hashpw(updatePasswordVo.getNewPw(), BCrypt.gensalt());
 
             userRepository.save(User.builder()
-                    .userSeq(user.getUserSeq())
+                    .id(user.getId())
                     .userId(user.getUserId())
                     .password(newPassword)
                     .phoneNumber(user.getPhoneNumber())
@@ -232,9 +232,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseVo getUser(String userId) {
+    public ResponseVo getUser(String id) {
         ResponseVo responseVo;
-        UserInfoVo userInfo = userRepository.findByUserInfo(userId);
+        UserInfoVo userInfo = userRepository.findByUserInfo(id);
 
         if (userInfo == null) {
             responseVo = ResponseVo.builder()
@@ -254,9 +254,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public ResponseVo updateUser(UpdateUserVo updateUserVo, String userId) {
+    public ResponseVo updateUser(UpdateUserVo updateUserVo, String id) {
         ResponseVo response;
-        User user = userRepository.findFirstByUserId(userId);
+        User user = userRepository.findById(id).orElse(null);
 
         if (user == null) {
             response = ResponseVo.builder()
@@ -276,8 +276,8 @@ public class UserServiceImpl implements UserService {
             }
 
             User createUser = User.builder()
-                    .userSeq(user.getUserSeq())
-                    .userId(userId)
+                    .id(user.getId())
+                    .userId(user.getUserId())
                     .password(user.getPassword())
                     .nickName(updateNickName)
                     .phoneNumber(updatePhoneNumber)
@@ -304,11 +304,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public ResponseVo deleteUser(String userId) {
-        ResponseVo response;
-        User user = userRepository.findFirstByUserId(userId);
+    public ResponseVo deleteUser(String userPkId) {
 
-        // TODO metaData 조회 시 N+1 문제 해결 필요!!!
+        // TODO redis 에 access token 등록
+
+        ResponseVo response;
+        User user = userRepository.findById(userPkId).orElse(null);
 
         if (user == null) {
             response = ResponseVo.builder()
@@ -316,11 +317,11 @@ public class UserServiceImpl implements UserService {
                     .message(NO_EXIST_USER.getMessage())
                     .build();
         } else {
-            Long userSeq = userMetaDataRepository.findMetadataByUserId(userId);
+            UserMetadata userMetadata = userMetaDataRepository.findMetadataByUserId(userPkId);
 
             // 연관된 메타데이터 삭제
-            if (userSeq != null) {
-                userMetaDataRepository.deleteById(userSeq);
+            if (userMetadata != null) {
+                userMetaDataRepository.deleteById(userMetadata.getId());
             }
 
             userRepository.delete(user);
