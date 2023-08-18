@@ -20,6 +20,7 @@ public enum ResponseCode {
     NO_EXIST_USER(2002, "NO_EXIST_USER", "No Exist User"),
     INCORRECT_ID_OR_PASSWORD(2003, "INCORRECT_ID_OR_PASSWORD", "ID or Password is incorrect"),
     UPDATE_USER_FAIL(2004, "UPDATE_USER_FAIL", "Update User Fail"),
+    NO_EXIST_USER_METADATA(2005, "NO_EXIST_USER_METADATA", "No Exist User Metadata"),
 
     // TOKEN : 3000
     INVALID_REFRESH_TOKEN(3000, "INVALID_REFRESH_TOKEN", "Invalid Refresh Token"),

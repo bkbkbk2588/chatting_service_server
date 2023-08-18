@@ -6,7 +6,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Map;
 
 @Getter
-public class CreateUserMetadataVo {
+public class CreateUpdateUserMetadataVo {
     @NotNull
     private Map<String, Object> metadata;
 }

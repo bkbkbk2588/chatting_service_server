@@ -10,8 +10,9 @@ import com.example.chatting_server.vo.request.*;
 import com.example.chatting_server.vo.response.ResponseVo;
 import com.example.chatting_server.vo.response.TokenVo;
 import com.example.chatting_server.vo.response.UserInfoVo;
+import com.example.chatting_server.vo.response.UserMetadataVo;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.querydsl.core.Tuple;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -71,23 +72,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseVo logout(String accessToken, String refreshToken) {
-        String access = accessToken,
-                refresh = refreshToken;
-
-        if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
-            access = accessToken.substring(7);
-        }
-
-        if (StringUtils.hasText(refreshToken) && refreshToken.startsWith("Bearer ")) {
-            refresh = refreshToken.substring(7);
-        }
-
-        long accessExpireSeconds = tokenProvider.getExpireSeconds(access),
-                refreshExpireSeconds = tokenProvider.getExpireSeconds(refresh);
-
-        // 기존 토큰 블랙리스트 등록
-        redisTemplate.opsForValue().set(access, BLACK_LIST, accessExpireSeconds, TimeUnit.SECONDS);
-        redisTemplate.opsForValue().set(refresh, BLACK_LIST, refreshExpireSeconds, TimeUnit.SECONDS);
+        insertTokenBlackList(accessToken, refreshToken);
 
         return ResponseVo.builder()
                 .code(SUCCESS.getCode())
@@ -304,7 +289,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public ResponseVo deleteUser(String userPkId, String accessToken) {
+    public ResponseVo deleteUser(String userPkId, String accessToken, String refreshToken) {
         ResponseVo response;
         User user = userRepository.findById(userPkId).orElse(null);
 
@@ -323,23 +308,165 @@ public class UserServiceImpl implements UserService {
 
             userRepository.delete(user);
 
-            String access = accessToken;
+            // 토큰 블랙리스트에 등록
+            insertTokenBlackList(accessToken, refreshToken);
 
-            if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
-                access = accessToken.substring(7);
-            }
-
-            long accessExpireSeconds = tokenProvider.getExpireSeconds(access);
-
-            // 기존 토큰 블랙리스트 등록
-            redisTemplate.opsForValue().set(access, BLACK_LIST, accessExpireSeconds, TimeUnit.SECONDS);
-
-            response= ResponseVo.builder()
+            response = ResponseVo.builder()
                     .code(SUCCESS.getCode())
                     .message(SUCCESS.getMessage())
                     .build();
         }
 
         return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo createMetadata(String id, CreateUpdateUserMetadataVo createUserMetadataVo) {
+        ResponseVo response;
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String metadata = objectMapper.writeValueAsString(createUserMetadataVo.getMetadata());
+
+            userMetaDataRepository.save(UserMetadata.builder()
+                    .metadata(metadata)
+                    .user(User.builder()
+                            .id(id)
+                            .build())
+                    .build());
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .build();
+
+        } catch (JsonProcessingException e) {
+            response = ResponseVo.builder()
+                    .code(INVALID_PARAM_VALUE.getCode())
+                    .message(INVALID_PARAM_VALUE.getMessage() + " (metadata)")
+                    .build();
+        }
+
+        return response;
+    }
+
+    @Override
+    public ResponseVo getMetadata(String id, String userId) {
+        ResponseVo response;
+
+        UserMetadata userMetadata = userMetaDataRepository.findMetadataByUserId(id);
+
+        if (userMetadata == null) {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_USER_METADATA.getCode())
+                    .message(NO_EXIST_USER_METADATA.getMessage())
+                    .build();
+        } else {
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            try {
+                Map<String, Object> metadata = objectMapper.readValue(userMetadata.getMetadata(), Map.class);
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .data(UserMetadataVo.builder()
+                                .userId(userId)
+                                .metadata(metadata).build())
+                        .build();
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+
+                response = ResponseVo.builder()
+                        .code(FAIL.getCode())
+                        .message(FAIL.getMessage())
+                        .build();
+            }
+        }
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo updateMetadata(String id, CreateUpdateUserMetadataVo createUpdateUserMetadataVo) {
+        ResponseVo response;
+        UserMetadata userMetadata = userMetaDataRepository.findMetadataByUserId(id);
+
+        if (userMetadata == null) {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_USER_METADATA.getCode())
+                    .message(NO_EXIST_USER_METADATA.getMessage())
+                    .build();
+        } else {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                String metadata = objectMapper.writeValueAsString(createUpdateUserMetadataVo.getMetadata());
+
+                userMetaDataRepository.save(UserMetadata.builder()
+                        .id(userMetadata.getId())
+                        .metadata(metadata)
+                        .user(User.builder()
+                                .id(id)
+                                .build())
+                        .build());
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .build();
+
+            } catch (JsonProcessingException e) {
+                response = ResponseVo.builder()
+                        .code(INVALID_PARAM_VALUE.getCode())
+                        .message(INVALID_PARAM_VALUE.getMessage() + " (metadata)")
+                        .build();
+            }
+        }
+
+
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo deleteMetadata(String id) {
+        ResponseVo response;
+        UserMetadata userMetadata = userMetaDataRepository.findMetadataByUserId(id);
+
+        if (userMetadata == null) {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_USER_METADATA.getCode())
+                    .message(NO_EXIST_USER_METADATA.getMessage())
+                    .build();
+        } else {
+            userMetaDataRepository.delete(userMetadata);
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .build();
+        }
+        return response;
+    }
+
+    private void insertTokenBlackList(String accessToken, String refreshToken) {
+        String access = accessToken,
+                refresh = refreshToken;
+
+        if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
+            access = accessToken.substring(7);
+        }
+
+        if (StringUtils.hasText(refreshToken) && refreshToken.startsWith("Bearer ")) {
+            refresh = refreshToken.substring(7);
+        }
+
+        long accessExpireSeconds = tokenProvider.getExpireSeconds(access),
+                refreshExpireSeconds = tokenProvider.getExpireSeconds(refresh);
+
+        // 기존 토큰 블랙리스트 등록
+        redisTemplate.opsForValue().set(access, BLACK_LIST, accessExpireSeconds, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(refresh, BLACK_LIST, refreshExpireSeconds, TimeUnit.SECONDS);
     }
 }

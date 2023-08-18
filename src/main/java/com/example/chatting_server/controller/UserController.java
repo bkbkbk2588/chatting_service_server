@@ -100,21 +100,44 @@ public class UserController {
      * * 회원 탈퇴
      */
     @DeleteMapping
-    public ResponseVo deleteUser(Authentication authentication, @RequestHeader("Authorization") String accessToken) {
+    public ResponseVo deleteUser(Authentication authentication, @RequestHeader("Authorization") String accessToken, @RequestHeader("RefreshToken") String refreshToken) {
 
-        return userService.deleteUser(String.valueOf(authentication.getCredentials()), accessToken);
+        return userService.deleteUser(String.valueOf(authentication.getCredentials()), accessToken, refreshToken);
     }
 
     /**
      * 사용자 메타데이터 등록
      */
     @PostMapping("/metadata")
-    public ResponseVo createMetadata(Authentication authentication, @Valid @RequestBody CreateUserMetadataVo createUserMetadataVo) {
+    public ResponseVo createMetadata(Authentication authentication, @Valid @RequestBody CreateUpdateUserMetadataVo createUpdateUserMetadataVo) {
 
-        // ObjectMapper를 사용하여 Map을 JSON 문자열로 변환
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String json = objectMapper.writeValueAsString(map);
+        return userService.createMetadata(String.valueOf(authentication.getCredentials()), createUpdateUserMetadataVo);
+    }
 
-        return null;
+    /**
+     * 사용자 메타데이터 조회
+     */
+    @GetMapping("/metadata")
+    public ResponseVo getMetadata(Authentication authentication) {
+
+        return userService.getMetadata(String.valueOf(authentication.getCredentials()), authentication.getName());
+    }
+
+    /**
+     * 사용자 메타데이터 수정
+     */
+    @PutMapping("/metadata")
+    public ResponseVo updateMetadata(Authentication authentication, @Valid @RequestBody CreateUpdateUserMetadataVo createUpdateUserMetadataVo) {
+
+        return userService.updateMetadata(String.valueOf(authentication.getCredentials()), createUpdateUserMetadataVo);
+    }
+
+    /**
+     * 사용자 메타데이터 삭제
+     */
+    @DeleteMapping("/metadata")
+    public ResponseVo deleteMetadata(Authentication authentication) {
+
+        return userService.deleteMetadata(String.valueOf(authentication.getCredentials()));
     }
 }
