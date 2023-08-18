@@ -14,7 +14,8 @@ import javax.persistence.*;
 public class ChannelUser {
 
     @Id
-    @GenericGenerator(name = "customIdGenerator",
+    @GeneratedValue(generator = "channelUserIdGenerator")
+    @GenericGenerator(name = "channelUserIdGenerator",
             strategy = "com.example.chatting_server.config.CustomIdGenerator",
             parameters = {
                     @org.hibernate.annotations.Parameter(name = "prefix", value = "CHANNEL_USER_")

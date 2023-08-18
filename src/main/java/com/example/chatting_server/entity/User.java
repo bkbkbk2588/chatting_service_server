@@ -6,7 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import java.io.Serializable;
 
 @Entity
@@ -16,10 +19,9 @@ import java.io.Serializable;
 @Getter
 public class User implements Serializable {
 
-    // TODO 2. security에 userSeq 넣기
     @Id
-    @GeneratedValue(generator = "customIdGenerator")
-    @GenericGenerator(name = "customIdGenerator",
+    @GeneratedValue(generator = "userIdGenerator")
+    @GenericGenerator(name = "userIdGenerator",
             strategy = "com.example.chatting_server.config.CustomIdGenerator",
             parameters = {
                     @org.hibernate.annotations.Parameter(name = "prefix", value = "USER_")
@@ -35,7 +37,7 @@ public class User implements Serializable {
     @Column
     private String phoneNumber;
 
-    @Column
+    @Column(unique = true)
     private String nickName;
 
     // 0 : 정상, 1 : 정지, 2 : 휴먼상태

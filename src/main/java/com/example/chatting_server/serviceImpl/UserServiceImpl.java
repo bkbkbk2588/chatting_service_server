@@ -129,15 +129,22 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public ResponseVo createUser(CreateUserVo createUserVo) {
-        ResponseVo response;
-        User user = userRepository.findFirstByUserId(createUserVo.getId());
+        ResponseVo response = null;
+        User user = userRepository.findFirstByUserIdOrNickName(createUserVo.getId(), createUserVo.getNickName());
 
         // 유저 존재 체크
         if (user != null) {
-            response = ResponseVo.builder()
-                    .code(ALREADY_EXIST_ID.getCode())
-                    .message(ALREADY_EXIST_ID.getMessage())
-                    .build();
+            if (user.getId().equals(createUserVo.getId())) {
+                response = ResponseVo.builder()
+                        .code(ALREADY_EXIST_ID.getCode())
+                        .message(ALREADY_EXIST_ID.getMessage())
+                        .build();
+            } else if (user.getNickName().equals(createUserVo.getNickName())) {
+                response = ResponseVo.builder()
+                        .code(ALREADY_EXIST_NICKNAME.getCode())
+                        .message(ALREADY_EXIST_NICKNAME.getMessage())
+                        .build();
+            }
         } else {
             String hashedPassword = BCrypt.hashpw(createUserVo.getPw(), BCrypt.gensalt());
 

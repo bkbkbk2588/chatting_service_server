@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Channel {
     @Id
-    @GeneratedValue(generator = "customIdGenerator")
-    @GenericGenerator(name = "customIdGenerator",
+    @GeneratedValue(generator = "channelIdGenerator")
+    @GenericGenerator(name = "channelIdGenerator",
             strategy = "com.example.chatting_server.config.CustomIdGenerator",
             parameters = {
                     @org.hibernate.annotations.Parameter(name = "prefix", value = "CHANNEL_")

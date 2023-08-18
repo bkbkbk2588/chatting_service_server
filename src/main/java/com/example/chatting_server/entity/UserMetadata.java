@@ -15,8 +15,8 @@ import javax.persistence.*;
 @Getter
 public class UserMetadata {
     @Id
-    @GeneratedValue(generator = "customIdGenerator")
-    @GenericGenerator(name = "customIdGenerator",
+    @GeneratedValue(generator = "userMetadataIdGenerator")
+    @GenericGenerator(name = "userMetadataIdGenerator",
             strategy = "com.example.chatting_server.config.CustomIdGenerator",
             parameters = {
                     @org.hibernate.annotations.Parameter(name = "prefix", value = "USER_METADATA_")
