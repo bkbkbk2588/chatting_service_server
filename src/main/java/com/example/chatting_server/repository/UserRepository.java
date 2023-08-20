@@ -9,4 +9,5 @@ public interface UserRepository extends JpaRepository<User, String>, CustomUserR
     User findFirstByUserIdOrNickName(String userId, String nickName);
     User findFirstByNickNameAndPhoneNumber(String nickName, String phoneNumber);
     User findByUserIdAndPhoneNumber(String userId, String phoneNumber);
+    User findByNickName(String nickName);
 }

@@ -1,7 +1,9 @@
 package com.example.chatting_server.serviceImpl;
 
 import com.example.chatting_server.entity.User;
+import com.example.chatting_server.entity.UserFriend;
 import com.example.chatting_server.entity.UserMetadata;
+import com.example.chatting_server.repository.UserFriendRepository;
 import com.example.chatting_server.repository.UserMetaDataRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.security.component.TokenProvider;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -36,6 +39,8 @@ public class UserServiceImpl implements UserService {
     final UserRepository userRepository;
 
     final UserMetaDataRepository userMetaDataRepository;
+
+    final UserFriendRepository userFriendRepository;
 
     final TokenProvider tokenProvider;
 
@@ -256,38 +261,46 @@ public class UserServiceImpl implements UserService {
                     .message(NO_EXIST_USER.getMessage())
                     .build();
         } else {
-            String updateNickName = updateUserVo.getNickName(),
-                    updatePhoneNumber = updateUserVo.getPhoneNumber();
-
-            if (updateNickName == null || updateNickName.isBlank()) {
-                updateNickName = user.getNickName();
-            }
-
-            if (updatePhoneNumber == null || updatePhoneNumber.isBlank()) {
-                updatePhoneNumber = user.getPhoneNumber();
-            }
-
-            User createUser = User.builder()
-                    .id(user.getId())
-                    .userId(user.getUserId())
-                    .password(user.getPassword())
-                    .nickName(updateNickName)
-                    .phoneNumber(updatePhoneNumber)
-                    .userStatus(user.getUserStatus())
-                    .build();
-
-            User updateUser = userRepository.save(createUser);
-
-            if (updateUser == null) {
+            if (user.getNickName().equals(updateUserVo.getNickName())) { // 닉네임 중복 체크
                 response = ResponseVo.builder()
-                        .code(UPDATE_USER_FAIL.getCode())
-                        .message(UPDATE_USER_FAIL.getMessage())
+                        .code(ALREADY_EXIST_NICKNAME.getCode())
+                        .message(ALREADY_EXIST_NICKNAME.getMessage())
                         .build();
             } else {
-                response = ResponseVo.builder()
-                        .code(SUCCESS.getCode())
-                        .message(SUCCESS.getMessage())
+
+                String updateNickName = updateUserVo.getNickName(),
+                        updatePhoneNumber = updateUserVo.getPhoneNumber();
+
+                if (updateNickName == null || updateNickName.isBlank()) {
+                    updateNickName = user.getNickName();
+                }
+
+                if (updatePhoneNumber == null || updatePhoneNumber.isBlank()) {
+                    updatePhoneNumber = user.getPhoneNumber();
+                }
+
+                User createUser = User.builder()
+                        .id(user.getId())
+                        .userId(user.getUserId())
+                        .password(user.getPassword())
+                        .nickName(updateNickName)
+                        .phoneNumber(updatePhoneNumber)
+                        .userStatus(user.getUserStatus())
                         .build();
+
+                User updateUser = userRepository.save(createUser);
+
+                if (updateUser == null) {
+                    response = ResponseVo.builder()
+                            .code(UPDATE_USER_FAIL.getCode())
+                            .message(UPDATE_USER_FAIL.getMessage())
+                            .build();
+                } else {
+                    response = ResponseVo.builder()
+                            .code(SUCCESS.getCode())
+                            .message(SUCCESS.getMessage())
+                            .build();
+                }
             }
         }
 
@@ -454,6 +467,36 @@ public class UserServiceImpl implements UserService {
                     .message(SUCCESS.getMessage())
                     .build();
         }
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo postFriend(String id, String nickname) {
+        User user = userRepository.findByNickName(nickname);
+        ResponseVo response;
+
+        if (user == null) {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_USER.getCode())
+                    .message(NO_EXIST_USER.getMessage())
+                    .build();
+        } else {
+            userFriendRepository.save(UserFriend.builder()
+                            .ownerUser(User.builder()
+                                    .id(id)
+                                    .build())
+                            .friendUser(user)
+                            .userStatus(0)
+                            .inviteTime(LocalDateTime.now())
+                    .build());
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .build();
+        }
+
         return response;
     }
 

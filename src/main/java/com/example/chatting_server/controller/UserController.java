@@ -140,4 +140,13 @@ public class UserController {
 
         return userService.deleteMetadata(String.valueOf(authentication.getCredentials()));
     }
+
+    /**
+     * 친구 추가 요청
+     */
+    @PostMapping("/friend")
+    public ResponseVo postFriend(Authentication authentication, @RequestBody RequestFriendVo requestFriendVo) {
+
+        return userService.postFriend(String.valueOf(authentication.getCredentials()), requestFriendVo.getNickName());
+    }
 }

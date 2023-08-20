@@ -32,7 +32,7 @@ public class UserFriend {
     @JoinColumn(name = "friend_id", referencedColumnName = "id")
     private User friendUser;
 
-    // 0 : 초대 상태, 1 : 초대 수락
+    // 0 : 초대 대기 상태, 1 : 초대 수락
     @Column
     private int userStatus;
 
