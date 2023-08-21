@@ -5,12 +5,16 @@ import com.example.chatting_server.entity.UserFriend;
 import com.example.chatting_server.repository.UserFriendRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.service.FriendService;
+import com.example.chatting_server.vo.response.FriendUserListVo;
+import com.example.chatting_server.vo.response.FriendUserVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static com.example.chatting_server.util.ChatCode.INVITE_ACCEPT;
@@ -36,19 +40,28 @@ public class FriendServiceImpl implements FriendService {
                     .message(NO_EXIST_USER.getMessage())
                     .build();
         } else {
-            userFriendRepository.save(UserFriend.builder()
-                    .ownerUser(User.builder()
-                            .id(id)
-                            .build())
-                    .friendUser(user)
-                    .userStatus(INVITE_WAIT.getCode())
-                    .inviteTime(LocalDateTime.now())
-                    .build());
+            Optional<UserFriend> userFriend = userFriendRepository.findByOwnerUserIdAndFriendUserId(id, user.getId());
 
-            response = ResponseVo.builder()
-                    .code(SUCCESS.getCode())
-                    .message(SUCCESS.getMessage())
-                    .build();
+            if (userFriend.isPresent()) {
+                response = ResponseVo.builder()
+                        .code(ALREADY_EXIST_REQUEST_FRIEND.getCode())
+                        .message(ALREADY_EXIST_REQUEST_FRIEND.getMessage())
+                        .build();
+            } else {
+                userFriendRepository.save(UserFriend.builder()
+                        .ownerUser(User.builder()
+                                .id(id)
+                                .build())
+                        .friendUser(user)
+                        .userStatus(INVITE_WAIT.getCode())
+                        .inviteTime(LocalDateTime.now())
+                        .build());
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .build();
+            }
         }
 
         return response;
@@ -121,4 +134,46 @@ public class FriendServiceImpl implements FriendService {
         return response;
     }
 
+    @Override
+    public ResponseVo getFriendList(String ownerId) {
+
+
+        return null;
+    }
+
+    @Override
+    public ResponseVo getRequestFriendList(String ownerId) {
+
+        // N+1 문제 발생 해결
+        Optional<List<UserFriend>> userFriendList = userFriendRepository.findByOwnerUserIdAndUserStatus(ownerId, INVITE_WAIT.getCode());
+        ResponseVo response;
+
+        if (userFriendList.isPresent()) {
+            List<UserFriend> userFriendData = userFriendList.get();
+            List<FriendUserVo> friendList = new ArrayList<>();
+
+            for (UserFriend friend:userFriendData) {
+                friendList.add(FriendUserVo.builder()
+                                .friendId(friend.getId())
+                                .nickName(friend.getFriendUser().getNickName())
+                                .inviteTime(friend.getInviteTime())
+                                .userStatus(friend.getUserStatus())
+                        .build());
+            }
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .data(FriendUserListVo.builder()
+                            .friendList(friendList)
+                            .build())
+                    .build();
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_CONTENT.getCode())
+                    .message(NO_CONTENT.getMessage())
+                    .build();
+        }
+        return response;
+    }
 }

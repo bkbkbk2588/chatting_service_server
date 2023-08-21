@@ -138,7 +138,7 @@ public class UserServiceImpl implements UserService {
 
         // 유저 존재 체크
         if (user != null) {
-            if (user.getId().equals(createUserVo.getId())) {
+            if (user.getUserId().equals(createUserVo.getId())) {
                 response = ResponseVo.builder()
                         .code(ALREADY_EXIST_ID.getCode())
                         .message(ALREADY_EXIST_ID.getMessage())

@@ -43,4 +43,20 @@ public class FriendController {
 
         return friendService.friendRefuse(String.valueOf(authentication.getCredentials()), friendIdVo.getFriendId());
     }
+
+    /**
+     * 친구 목록 조회
+     */
+    @GetMapping("/list")
+    public ResponseVo getFriendList(Authentication authentication) {
+        return friendService.getFriendList(String.valueOf(authentication.getCredentials()));
+    }
+
+    /**
+     * 친구 요청 목록 조회
+     */
+    @GetMapping("/request/list")
+    public ResponseVo getRequestFriendList(Authentication authentication) {
+        return friendService.getRequestFriendList(String.valueOf(authentication.getCredentials()));
+    }
 }

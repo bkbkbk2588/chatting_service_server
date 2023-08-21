@@ -6,4 +6,7 @@ public interface FriendService {
     ResponseVo postFriend(String id, String nickname);
     ResponseVo friendAccept(String id, String friendId);
     ResponseVo friendRefuse(String id, String friendId);
+
+    ResponseVo getFriendList(String ownerId);
+    ResponseVo getRequestFriendList(String ownerId);
 }
