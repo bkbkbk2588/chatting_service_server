@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.example.chatting_server.util.ChatCode.*;
 import static com.example.chatting_server.util.ResponseCode.*;
 
 @Service
@@ -39,8 +40,6 @@ public class UserServiceImpl implements UserService {
     final UserRepository userRepository;
 
     final UserMetaDataRepository userMetaDataRepository;
-
-    final UserFriendRepository userFriendRepository;
 
     final TokenProvider tokenProvider;
 
@@ -158,7 +157,7 @@ public class UserServiceImpl implements UserService {
                     .password(hashedPassword)
                     .nickName(createUserVo.getNickName())
                     .phoneNumber(createUserVo.getPhoneNumber())
-                    .userStatus(0)
+                    .userStatus(USER_OK.getCode())
                     .build();
 
             userRepository.save(createUser);
@@ -467,36 +466,6 @@ public class UserServiceImpl implements UserService {
                     .message(SUCCESS.getMessage())
                     .build();
         }
-        return response;
-    }
-
-    @Transactional
-    @Override
-    public ResponseVo postFriend(String id, String nickname) {
-        User user = userRepository.findByNickName(nickname);
-        ResponseVo response;
-
-        if (user == null) {
-            response = ResponseVo.builder()
-                    .code(NO_EXIST_USER.getCode())
-                    .message(NO_EXIST_USER.getMessage())
-                    .build();
-        } else {
-            userFriendRepository.save(UserFriend.builder()
-                            .ownerUser(User.builder()
-                                    .id(id)
-                                    .build())
-                            .friendUser(user)
-                            .userStatus(0)
-                            .inviteTime(LocalDateTime.now())
-                    .build());
-
-            response = ResponseVo.builder()
-                    .code(SUCCESS.getCode())
-                    .message(SUCCESS.getMessage())
-                    .build();
-        }
-
         return response;
     }
 

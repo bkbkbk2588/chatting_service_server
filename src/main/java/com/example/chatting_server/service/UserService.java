@@ -18,6 +18,4 @@ public interface UserService {
     ResponseVo getMetadata(String id, String userId);
     ResponseVo updateMetadata(String id, CreateUpdateUserMetadataVo createUpdateUserMetadataVo);
     ResponseVo deleteMetadata(String id);
-
-    ResponseVo postFriend(String id, String nickname);
 }
