@@ -1,6 +1,9 @@
 package com.example.chatting_server.customRepositoryImpl;
 
 import com.example.chatting_server.customRepository.CustomFriendRepository;
+import static com.example.chatting_server.entity.QUserFriend.userFriend;
+
+import static com.example.chatting_server.entity.QUser.user;
 import com.example.chatting_server.vo.response.FriendUserVo;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -14,9 +17,14 @@ public class CustomFriendRepositoryImpl implements CustomFriendRepository {
 
     @Override
     public List<FriendUserVo> getFriendList(String id, int userStatus) {
-        // TODO 쿼리 조인해서 하기
-//        queryFactory.select(Projections)
-
-        return null;
+        return queryFactory.select(Projections.constructor(FriendUserVo.class,
+                        user.nickName,
+                        userFriend.id,
+                        userFriend.userStatus,
+                        userFriend.inviteTime))
+                .from(userFriend).join(user).on(user.id.eq(userFriend.friendUser.id))
+                .where(userFriend.ownerUser.id.eq(id)
+                        .and(userFriend.userStatus.eq(userStatus)))
+                .fetch();
     }
 }

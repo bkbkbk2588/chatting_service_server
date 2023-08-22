@@ -76,7 +76,7 @@ public class FriendServiceImpl implements FriendService {
         if (userFriend.isPresent()) {
             UserFriend userFriendEntity = userFriend.get();
 
-            if (userFriendEntity.getFriendUser().getId().equals(id)) {
+            if (userFriendEntity.getOwnerUser().getId().equals(id)) {
                 userFriendRepository.save(UserFriend.builder()
                         .id(friendId)
                         .friendUser(userFriendEntity.getFriendUser())
@@ -112,7 +112,7 @@ public class FriendServiceImpl implements FriendService {
         ResponseVo response;
 
         if (userFriend.isPresent()) {
-            if (userFriend.get().getFriendUser().getId().equals(id) && userFriend.get().getUserStatus() == INVITE_WAIT.getCode()) {
+            if (userFriend.get().getOwnerUser().getId().equals(id) && userFriend.get().getUserStatus() == INVITE_WAIT.getCode()) {
                 userFriendRepository.delete(userFriend.get());
 
                 response = ResponseVo.builder()
@@ -135,43 +135,54 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public ResponseVo getFriendList(String ownerId) {
-
-
-        return null;
-    }
-
-    @Override
-    public ResponseVo getRequestFriendList(String ownerId) {
-
-        // N+1 문제 발생 해결
-        Optional<List<UserFriend>> userFriendList = userFriendRepository.findByOwnerUserIdAndUserStatus(ownerId, INVITE_WAIT.getCode());
+    public ResponseVo getFriendList(String ownerId, int userStatus) {
+        List<FriendUserVo> userFriendList = userFriendRepository.getFriendList(ownerId, INVITE_WAIT.getCode());
         ResponseVo response;
 
-        if (userFriendList.isPresent()) {
-            List<UserFriend> userFriendData = userFriendList.get();
-            List<FriendUserVo> friendList = new ArrayList<>();
-
-            for (UserFriend friend:userFriendData) {
-                friendList.add(FriendUserVo.builder()
-                                .friendId(friend.getId())
-                                .nickName(friend.getFriendUser().getNickName())
-                                .inviteTime(friend.getInviteTime())
-                                .userStatus(friend.getUserStatus())
-                        .build());
-            }
-
+        if (userFriendList != null && userFriendList.size() > 0) {
             response = ResponseVo.builder()
                     .code(SUCCESS.getCode())
                     .message(SUCCESS.getMessage())
                     .data(FriendUserListVo.builder()
-                            .friendList(friendList)
+                            .friendList(userFriendList)
                             .build())
                     .build();
         } else {
             response = ResponseVo.builder()
                     .code(NO_CONTENT.getCode())
                     .message(NO_CONTENT.getMessage())
+                    .build();
+        }
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo deleteFriendList(String id, String friendId) {
+        Optional<UserFriend> userFriend = userFriendRepository.findById(friendId);
+        ResponseVo response;
+
+        if (userFriend.isPresent()) {
+            UserFriend userFriendEntity = userFriend.get();
+
+            if (userFriendEntity.getOwnerUser().getId().equals(id)) {
+                userFriendRepository.delete(userFriendEntity);
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .build();
+            } else { // 수락/거절 권한이 없을 경우
+                response = ResponseVo.builder()
+                        .code(UNAUTHORIZED_REQUEST_FRIEND.getCode())
+                        .message(UNAUTHORIZED_REQUEST_FRIEND.getMessage())
+                        .build();
+            }
+
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_REQUEST_FRIEND.getCode())
+                    .message(NO_EXIST_REQUEST_FRIEND.getMessage())
                     .build();
         }
         return response;

@@ -7,6 +7,6 @@ public interface FriendService {
     ResponseVo friendAccept(String id, String friendId);
     ResponseVo friendRefuse(String id, String friendId);
 
-    ResponseVo getFriendList(String ownerId);
-    ResponseVo getRequestFriendList(String ownerId);
+    ResponseVo getFriendList(String ownerId, int userStatus);
+    ResponseVo deleteFriendList(String id, String friendId);
 }

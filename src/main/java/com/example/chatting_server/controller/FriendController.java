@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
+import static com.example.chatting_server.util.ChatCode.INVITE_ACCEPT;
+import static com.example.chatting_server.util.ChatCode.INVITE_WAIT;
+
 @RestController
 @RequestMapping("/friend")
 @RequiredArgsConstructor
@@ -49,7 +52,7 @@ public class FriendController {
      */
     @GetMapping("/list")
     public ResponseVo getFriendList(Authentication authentication) {
-        return friendService.getFriendList(String.valueOf(authentication.getCredentials()));
+        return friendService.getFriendList(String.valueOf(authentication.getCredentials()), INVITE_ACCEPT.getCode());
     }
 
     /**
@@ -57,6 +60,14 @@ public class FriendController {
      */
     @GetMapping("/request/list")
     public ResponseVo getRequestFriendList(Authentication authentication) {
-        return friendService.getRequestFriendList(String.valueOf(authentication.getCredentials()));
+        return friendService.getFriendList(String.valueOf(authentication.getCredentials()), INVITE_WAIT.getCode());
+    }
+
+    /**
+     * 친구 삭제
+     */
+    @DeleteMapping
+    public ResponseVo deleteFriendList(Authentication authentication, @Valid @RequestBody FriendIdVo friendIdVo) {
+        return friendService.deleteFriendList(String.valueOf(authentication.getCredentials()), friendIdVo.getFriendId());
     }
 }
