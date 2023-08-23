@@ -165,24 +165,29 @@ public class FriendServiceImpl implements FriendService {
         if (userFriend.isPresent()) {
             UserFriend userFriendEntity = userFriend.get();
 
-            if (userFriendEntity.getOwnerUser().getId().equals(id)) {
+            if (userFriendEntity.getOwnerUser().getId().equals(id) && userFriendEntity.getUserStatus() == INVITE_ACCEPT.getCode()) {
                 userFriendRepository.delete(userFriendEntity);
 
                 response = ResponseVo.builder()
                         .code(SUCCESS.getCode())
                         .message(SUCCESS.getMessage())
                         .build();
-            } else { // 수락/거절 권한이 없을 경우
+            } else if (userFriendEntity.getUserStatus() == INVITE_WAIT.getCode()) { // 친구 목록에는 있는데 대기중 일 경우
                 response = ResponseVo.builder()
-                        .code(UNAUTHORIZED_REQUEST_FRIEND.getCode())
-                        .message(UNAUTHORIZED_REQUEST_FRIEND.getMessage())
+                        .code(NO_EXIST_FRIEND.getCode())
+                        .message(NO_EXIST_FRIEND.getMessage())
+                        .build();
+            } else { // 권한이 없을 경우
+                response = ResponseVo.builder()
+                        .code(UNAUTHORIZED_FRIEND.getCode())
+                        .message(UNAUTHORIZED_FRIEND.getMessage())
                         .build();
             }
 
         } else {
             response = ResponseVo.builder()
-                    .code(NO_EXIST_REQUEST_FRIEND.getCode())
-                    .message(NO_EXIST_REQUEST_FRIEND.getMessage())
+                    .code(NO_EXIST_FRIEND.getCode())
+                    .message(NO_EXIST_FRIEND.getMessage())
                     .build();
         }
         return response;
