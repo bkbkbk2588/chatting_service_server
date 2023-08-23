@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,12 +37,22 @@ public class ChannelServiceImpl implements ChannelService {
     public ResponseVo postChannel(String userPkId, PostChannelVo postChannelVo) {
         /*
             TODO
-                1. 초대 받은 id가 존재 하는 유저인지 확인
+                1. 초대 받은 id가 존재 하는 유저인지 확인 / 친구 목록에 있는지도 같이 확인
                 2. 3개 테이블에 알맞은 값을 insert
          */
         ResponseVo response;
 
         List<String> inviteNickNameList = postChannelVo.getInviteNickNameList();
+
+        /*
+            TODO
+                1. 자기자신 id로 user랑 friend 목록 조인
+                2. 그리고 친구목록에서 user의 nickname 맞는지 확인
+
+                select * from user a left join user_friend b
+                on a.id = b.friend_id
+                where a.id = 'USER5'
+         */
         Optional<List<User>> inviteUserList = userRepository.findByNickNameIn(inviteNickNameList);
 
         if (inviteUserList.isPresent()) {
@@ -53,6 +64,7 @@ public class ChannelServiceImpl implements ChannelService {
             } else {
                 channelRepository.save(Channel.builder()
                                 .channelName(postChannelVo.getChannelName() == null ? CHANNEL_NAME : postChannelVo.getChannelName())
+                                .createTime(LocalDateTime.now())
                         .build());
             }
         } else {
