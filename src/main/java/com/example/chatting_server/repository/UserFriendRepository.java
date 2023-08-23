@@ -10,5 +10,4 @@ import java.util.Optional;
 public interface UserFriendRepository extends JpaRepository<UserFriend, String>, CustomFriendRepository {
 
     Optional<UserFriend> findByOwnerUserIdAndFriendUserId(String ownerId, String friendId);
-    Optional<List<UserFriend>> findByOwnerUserIdAndUserStatus(String id, int userStatus);
 }

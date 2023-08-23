@@ -23,7 +23,7 @@ public class ChannelUser {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name = "channel_pk_id", referencedColumnName = "id")
+    @JoinColumn(name = "channel_pk_id", referencedColumnName = "channelUrl")
     private Channel channel;
 
     @ManyToOne

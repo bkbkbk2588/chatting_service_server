@@ -23,10 +23,11 @@ public class GlobalExceptionHandler {
     private final String NOT_BLANK = "NotBlank";
     private final String NULL = "NotNull";
     private final String PATTERN = "Pattern";
+    private final String SIZE = "Size";
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ResponseVo> handleValidationException(BindException ex) {
-        log.error("BindException Error");
+        log.error("BindException Error : {}", ex.getMessage());
 
         ResponseVo responseVo = null;
 
@@ -41,6 +42,11 @@ public class GlobalExceptionHandler {
             responseVo = ResponseVo.builder()
                     .code(NO_REQUIRED_PARAM.getCode())
                     .message(NO_REQUIRED_PARAM.getMessage() + " (" + fieldError.getField() + ")")
+                    .build();
+        } else if (Objects.equals(fieldError.getCode(), SIZE)) {
+            responseVo = ResponseVo.builder()
+                    .code(INVALID_PARAM_LENGTH.getCode())
+                    .message(INVALID_PARAM_LENGTH.getMessage() + " (" + fieldError.getField() + ")")
                     .build();
         }
 

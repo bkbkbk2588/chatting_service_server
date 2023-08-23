@@ -9,11 +9,14 @@ public enum ChatCode {
 
     USER_OK(0),
     USER_SUSPENSION(1),
-    USER_HUMAN(2);
+    USER_HUMAN(2),
+
+    CHANNEL_UNHIDE(0),
+    CHANNEL_HIDE(1);
 
     private final int code;
 
-    ChatCode(int code){
+    ChatCode(int code) {
         this.code = code;
     }
 }

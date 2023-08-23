@@ -22,7 +22,7 @@ public class ChannelMetaData {
     private String id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "channel_pk_id", referencedColumnName = "id", unique = true)
+    @JoinColumn(name = "channel_pk_id", referencedColumnName = "channelUrl", unique = true)
     private Channel channel;
 
     @Column(columnDefinition = "JSON")

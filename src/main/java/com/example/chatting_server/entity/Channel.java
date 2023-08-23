@@ -20,9 +20,6 @@ public class Channel {
             parameters = {
                     @org.hibernate.annotations.Parameter(name = "prefix", value = "CHANNEL_")
             })
-    private String id;
-
-    @Column(unique = true)
     private String channelUrl;
 
     @Column
