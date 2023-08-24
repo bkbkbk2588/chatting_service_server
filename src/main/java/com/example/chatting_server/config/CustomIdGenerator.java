@@ -8,6 +8,7 @@ import org.hibernate.type.Type;
 
 import java.io.Serializable;
 import java.util.Properties;
+import java.util.UUID;
 
 public class CustomIdGenerator extends SequenceStyleGenerator {
     private String prefix;
@@ -21,6 +22,6 @@ public class CustomIdGenerator extends SequenceStyleGenerator {
     @Override
     public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 
-        return prefix + System.currentTimeMillis();
+        return prefix + System.currentTimeMillis() + UUID.randomUUID();
     }
 }
