@@ -13,14 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static com.example.chatting_server.util.ChatCode.INVITE_ACCEPT;
 import static com.example.chatting_server.util.ChatCode.INVITE_WAIT;
 import static com.example.chatting_server.util.ResponseCode.*;
-import static com.example.chatting_server.util.ResponseCode.NO_EXIST_REQUEST_FRIEND;
 
 @Service
 @RequiredArgsConstructor

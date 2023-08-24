@@ -27,7 +27,7 @@ public class ChannelUser {
     private Channel channel;
 
     @ManyToOne
-    @JoinColumn(name = "user_pk_id", referencedColumnName = "id", unique = true)
+    @JoinColumn(name = "user_pk_id", referencedColumnName = "id")
     private User user;
 
     // (0 : 초대 상태 / 1 : 참여 상태)

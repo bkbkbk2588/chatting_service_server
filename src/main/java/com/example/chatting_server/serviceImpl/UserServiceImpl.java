@@ -1,9 +1,7 @@
 package com.example.chatting_server.serviceImpl;
 
 import com.example.chatting_server.entity.User;
-import com.example.chatting_server.entity.UserFriend;
 import com.example.chatting_server.entity.UserMetadata;
-import com.example.chatting_server.repository.UserFriendRepository;
 import com.example.chatting_server.repository.UserMetaDataRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.security.component.TokenProvider;
@@ -24,11 +22,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.example.chatting_server.util.ChatCode.*;
+import static com.example.chatting_server.util.ChatCode.USER_OK;
 import static com.example.chatting_server.util.ResponseCode.*;
 
 @Service

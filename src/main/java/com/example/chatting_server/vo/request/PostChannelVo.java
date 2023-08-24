@@ -10,7 +10,7 @@ import java.util.List;
 public class PostChannelVo {
 
     @NotNull
-    @Size(min = 1)
+    @Size(min = 1, max = 50)
     private List<String> inviteNickNameList;
 
     private String metaData;

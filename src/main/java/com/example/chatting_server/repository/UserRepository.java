@@ -13,5 +13,5 @@ public interface UserRepository extends JpaRepository<User, String>, CustomUserR
     User findFirstByNickNameAndPhoneNumber(String nickName, String phoneNumber);
     User findByUserIdAndPhoneNumber(String userId, String phoneNumber);
     User findByNickName(String nickName);
-    Optional<List<User>> findByNickNameIn(List<String> nickName);
+    Optional<List<User>> findByNickNameInAndUserStatus(List<String> nickName, int userStatus);
 }
