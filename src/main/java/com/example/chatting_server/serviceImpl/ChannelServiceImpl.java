@@ -1,6 +1,9 @@
 package com.example.chatting_server.serviceImpl;
 
-import com.example.chatting_server.entity.*;
+import com.example.chatting_server.entity.Channel;
+import com.example.chatting_server.entity.ChannelMetaData;
+import com.example.chatting_server.entity.ChannelUser;
+import com.example.chatting_server.entity.User;
 import com.example.chatting_server.repository.ChannelMetaDataRepository;
 import com.example.chatting_server.repository.ChannelRepository;
 import com.example.chatting_server.repository.ChannelUserRepository;
@@ -35,19 +38,14 @@ public class ChannelServiceImpl implements ChannelService {
     private final EntityManager entityManager;
 
     private final String CHANNEL_NAME = "Channel Name";
+    private final String CHANNEL_URL = "ChannelURL";
 
     @Transactional
     @Override
     public ResponseVo postChannel(String userPkId, PostChannelVo postChannelVo) {
-        ResponseVo response = null;
-
+        ResponseVo response;
         List<String> inviteNickNameList = postChannelVo.getInviteNickNameList();
 
-        /*
-            TODO
-                1. 자기자신 id로 user랑 friend 목록 조인
-                2. 그리고 친구목록에서 user의 nickname 맞는지 확인
-         */
         Optional<List<User>> inviteUserList = userRepository.findByNickNameInAndUserStatus(inviteNickNameList, USER_OK.getCode());
 
         if (inviteUserList.isPresent()) {
@@ -103,8 +101,6 @@ public class ChannelServiceImpl implements ChannelService {
                                 .build());
                     }
 
-//                    channelUserRepository.saveAll(channelUserList);
-
                     batchInsertEntities(channelUserList);
 
                     if (postChannelVo.getMetaData() != null) {
@@ -117,10 +113,12 @@ public class ChannelServiceImpl implements ChannelService {
 
                     Map<String, String> dataMap = new HashMap<>();
 
-//                    dataMap.put("channelUrl", channel);
+                    dataMap.put(CHANNEL_URL, channel.getChannelUrl());
+
                     response = ResponseVo.builder()
                             .code(SUCCESS.getCode())
                             .message(SUCCESS.getMessage())
+                            .data(dataMap)
                             .build();
                 }
             }
