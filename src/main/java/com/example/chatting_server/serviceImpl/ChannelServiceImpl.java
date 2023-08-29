@@ -10,8 +10,11 @@ import com.example.chatting_server.repository.ChannelUserRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.service.ChannelService;
 import com.example.chatting_server.vo.request.PostChannelVo;
+import com.example.chatting_server.vo.request.UpdateChannel;
 import com.example.chatting_server.vo.response.FriendUserInfoVo;
 import com.example.chatting_server.vo.response.ResponseVo;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,7 +73,7 @@ public class ChannelServiceImpl implements ChannelService {
                             .build();
                 } else { // 모든 유저가 존재/친구일 경우(채널/채널 유저/채널 메타데이터 insert)
                     Channel channel = channelRepository.save(Channel.builder()
-                            .channelName(postChannelVo.getChannelName() == null ? CHANNEL_NAME : postChannelVo.getChannelName())
+                            .channelName(!emptyAndNullCheck(postChannelVo.getChannelName()) ? CHANNEL_NAME : postChannelVo.getChannelName())
                             .owner(User.builder()
                                     .id(userPkId)
                                     .build())
@@ -103,7 +106,7 @@ public class ChannelServiceImpl implements ChannelService {
 
                     batchInsertEntities(channelUserList);
 
-                    if (postChannelVo.getMetaData() != null) {
+                    if (emptyAndNullCheck(postChannelVo.getMetaData())) {
                         channelMetaDataRepository.save(ChannelMetaData.builder()
                                 .channel(channel)
                                 .metadata(postChannelVo.getMetaData())
@@ -132,16 +135,156 @@ public class ChannelServiceImpl implements ChannelService {
         return response;
     }
 
+    @Override
+    public ResponseVo updateChannel(String userPkId, UpdateChannel updateChannel) {
+        ResponseVo response;
+        Optional<Channel> channel = channelRepository.findById(updateChannel.getChannelUrl());
+
+        try {
+            if (channel.isPresent()) {
+                Channel channelEntity = channel.get();
+
+                if (channelEntity.getOwner().getId().equals(userPkId)) {
+                    Channel resultChannel = channelEntity;
+
+                    // 채널 명이 변경이 있을 경우
+                    if (emptyAndNullCheck(updateChannel.getChannelName())) {
+                        resultChannel = channelRepository.save(Channel.builder()
+                                .channelUrl(channelEntity.getChannelUrl())
+                                .channelName(updateChannel.getChannelName())
+                                .createTime(channelEntity.getCreateTime())
+                                .owner(User.builder()
+                                        .id(userPkId)
+                                        .build())
+                                .lastMessage(channelEntity.getLastMessage())
+                                .lastMessageTime(channelEntity.getLastMessageTime())
+                                .build());
+                    }
+
+                    // 메타 데이터 있을 경우
+                    if (updateChannel.getMetadata() != null) {
+                        Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(updateChannel.getChannelUrl());
+
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        String metadata = objectMapper.writeValueAsString(updateChannel.getMetadata());
+
+                        if (channelMetaData.isPresent()) { // 메타 데이터 수정
+                            channelMetaDataRepository.save(ChannelMetaData.builder()
+                                    .id(channelMetaData.get().getId())
+                                    .channel(resultChannel)
+                                    .metadata(metadata)
+                                    .build());
+                        } else { // 메타 데이터 추가
+                            channelMetaDataRepository.save(ChannelMetaData.builder()
+                                    .channel(resultChannel)
+                                    .metadata(metadata)
+                                    .build());
+                        }
+                    }
+
+                    response = ResponseVo.builder()
+                            .code(SUCCESS.getCode())
+                            .message(SUCCESS.getMessage())
+                            .build();
+
+                } else {
+                    response = ResponseVo.builder()
+                            .code(UNAUTHORIZED_CHANNEL.getCode())
+                            .message(UNAUTHORIZED_CHANNEL.getMessage())
+                            .build();
+                }
+            } else {
+                response = ResponseVo.builder()
+                        .code(NO_EXIST_CHANNEL.getCode())
+                        .message(NO_EXIST_CHANNEL.getMessage())
+                        .build();
+            }
+
+
+        } catch (JsonProcessingException exception) {
+            response = ResponseVo.builder()
+                    .code(JSON_PARSE_ERROR.getCode())
+                    .message(JSON_PARSE_ERROR.getMessage())
+                    .build();
+        }
+
+        return response;
+    }
+
+    @Override
+    public ResponseVo deleteChannel(String userPkId, String channelUrl) {
+        ResponseVo response;
+        Optional<Channel> channel = channelRepository.findById(channelUrl);
+
+        if (channel.isPresent()) {
+            Optional<List<ChannelUser>> channelUserList = channelUserRepository.findByChannelChannelUrl(channelUrl);
+            channelUserList.ifPresent(channelUserRepository::deleteAll);
+
+            Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(channelUrl);
+
+            channelMetaData.ifPresent(channelMetaDataRepository::delete);
+
+            channelRepository.deleteById(channelUrl);
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .build();
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL.getCode())
+                    .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+        return response;
+    }
+
+    @Override
+    public ResponseVo leaveChannel(String userPkId, String channelUrl) {
+        ResponseVo response;
+        Optional<Channel> channel = channelRepository.findById(channelUrl);
+
+        if (channel.isPresent()) {
+            Channel channelEntity = channel.get();
+
+            // 방장이 나갈 경우
+            if (channelEntity.getOwner().getId().equals(userPkId)) {
+                // TODO 다른 user에게 방장 위임 / user 삭제
+                List<ChannelUser> channelUserList = channelUserRepository.findByChannelChannelUrl(channelUrl).get();
+
+                // 혼자 있는 채널을 나갈 경우 채널 삭제
+                if (channelUserList.size() == 1) {
+
+                } else {
+
+                }
+
+            } else { // 일반 유저가 나갈 경우
+                // TODO user 삭제
+            }
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL.getCode())
+                    .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+        return null;
+    }
+
     private void batchInsertEntities(List<ChannelUser> entities) {
 
         for (int i = 0; i < entities.size(); i++) {
             entityManager.persist(entities.get(i));
 
-           // 배치 크기 50으로 설정
+            // 배치 크기 50으로 설정
             if ((i + 1) % 50 == 0 || i == entities.size() - 1) {
                 entityManager.flush();
                 entityManager.clear();
             }
         }
+    }
+
+    private boolean emptyAndNullCheck(String data) {
+        return data != null && !data.isEmpty() && !data.isBlank();
     }
 }

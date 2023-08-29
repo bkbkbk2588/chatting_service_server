@@ -2,6 +2,7 @@ package com.example.chatting_server.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -11,6 +12,7 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
 public class ChannelMetaData {
     @Id
     @GeneratedValue(generator = "channelMetadataIdGenerator")

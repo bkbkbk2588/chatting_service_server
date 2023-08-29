@@ -32,8 +32,15 @@ public enum ResponseCode {
     INVALID_REFRESH_TOKEN(3000, "INVALID_REFRESH_TOKEN", "Invalid Refresh Token"),
     INVALID_ACCESS_TOKEN(3001, "INVALID_ACCESS_TOKEN", "Invalid Access Token"),
 
+    // CHANNEL : 4000
+    NO_EXIST_CHANNEL(4000, "NO_EXIST_CHANNEL", "No Exist Channel"),
+    UNAUTHORIZED_CHANNEL(4001, "UNAUTHORIZED_CHANNEL", "Unauthorized Channel"),
+
     // DB : 7000
-    DB_COMMIT_FAIL(7000, "DB_COMMIT_FAIL", "Db Commit Fail");
+    DB_COMMIT_FAIL(7000, "DB_COMMIT_FAIL", "Db Commit Fail"),
+
+    // ETC : 8000
+    JSON_PARSE_ERROR(8000, "JSON_PARSE_ERROR", "Json Parse Error");
 
     private final int code;
     private final String codeName;

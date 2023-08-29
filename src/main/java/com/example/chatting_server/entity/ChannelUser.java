@@ -22,11 +22,11 @@ public class ChannelUser {
             })
     private String id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "channel_pk_id", referencedColumnName = "channelUrl")
     private Channel channel;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_pk_id", referencedColumnName = "id")
     private User user;
 

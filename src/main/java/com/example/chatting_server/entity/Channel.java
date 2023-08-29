@@ -30,7 +30,7 @@ public class Channel {
     @Column
     private LocalDateTime createTime;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_pk_id", referencedColumnName = "id") // 외래 키 컬럼명 지정
     private User owner;
 
