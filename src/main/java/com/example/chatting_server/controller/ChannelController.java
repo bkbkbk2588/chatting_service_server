@@ -78,7 +78,7 @@ public class ChannelController {
     /**
      * * 사용자 채널 초대
      */
-    @PostMapping
+    @PostMapping("/invite")
     public ResponseVo inviteChannelUser(Authentication authentication, @Valid @RequestBody InviteChannelUserVo inviteChannelUserVo) {
         return channelService.inviteChannelUser(String.valueOf(authentication.getCredentials()), inviteChannelUserVo);
     }

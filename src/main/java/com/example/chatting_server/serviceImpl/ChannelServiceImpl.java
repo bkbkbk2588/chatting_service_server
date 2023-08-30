@@ -448,8 +448,60 @@ public class ChannelServiceImpl implements ChannelService {
         if (channel.isPresent()) {
             Channel channelEntity = channel.get();
 
+            // 방장일 경우
             if (channelEntity.getOwner().getId().equals(userPkId)) {
 
+                Optional<List<User>> inviteUserList = userRepository.findByNickNameInAndUserStatus(inviteChannelUserVo.getInviteNickNameList(), USER_OK.getCode());
+
+                if (inviteUserList.isPresent()) {
+                    if (inviteUserList.get().size() != inviteChannelUserVo.getInviteNickNameList().size()) {
+                        response = ResponseVo.builder()
+                                .code(NO_EXIST_USER.getCode())
+                                .message(NO_EXIST_USER.getMessage())
+                                .build();
+                    } else {
+                        List<String> inviteUserIdList = inviteUserList.get()
+                                .stream()
+                                .map(User::getId)
+                                .collect(Collectors.toList());
+                        List<FriendUserInfoVo> friendUserInfoList = userRepository.findByFriendUser(userPkId, inviteUserIdList);
+
+                        // 친구 목록에 없는 유저가 있을 경우
+                        if (friendUserInfoList.size() != inviteChannelUserVo.getInviteNickNameList().size()) {
+                            response = ResponseVo.builder()
+                                    .code(NO_EXIST_FRIEND.getCode())
+                                    .message(NO_EXIST_FRIEND.getMessage())
+                                    .build();
+                        } else { // 친구 목록에 초대한 유저가 다 있을 경우
+                            List<ChannelUser> channelUserList = new ArrayList<>();
+
+                            // TODO 이미 채널에 참가중인 유저인지 확인 로직 추가 필요
+                            // 초대 받은 사람 추가
+                            for (FriendUserInfoVo friendUserInfo : friendUserInfoList) {
+                                channelUserList.add(ChannelUser.builder()
+                                        .channel(channelEntity)
+                                        .user(User.builder()
+                                                .id(friendUserInfo.getFriendId())
+                                                .build())
+                                        .userState(INVITE_WAIT.getCode())
+                                        .hideState(CHANNEL_UNHIDE.getCode())
+                                        .build());
+                            }
+
+                            batchInsertEntities(channelUserList);
+                        }
+
+                        response = ResponseVo.builder()
+                                .code(SUCCESS.getCode())
+                                .message(SUCCESS.getMessage())
+                                .build();
+                    }
+                } else {
+                    response = ResponseVo.builder()
+                            .code(NO_EXIST_USER.getCode())
+                            .message(NO_EXIST_USER.getMessage())
+                            .build();
+                }
             } else {
                 response = ResponseVo.builder()
                         .code(UNAUTHORIZED_CHANNEL.getCode())
@@ -463,7 +515,7 @@ public class ChannelServiceImpl implements ChannelService {
                     .build();
         }
 
-        return null;
+        return response;
     }
 
     private void batchInsertEntities(List<ChannelUser> entities) {
