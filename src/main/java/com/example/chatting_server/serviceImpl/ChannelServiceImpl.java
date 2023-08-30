@@ -11,6 +11,8 @@ import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.service.ChannelService;
 import com.example.chatting_server.vo.request.PostChannelVo;
 import com.example.chatting_server.vo.request.UpdateChannel;
+import com.example.chatting_server.vo.request.UpdateHideChannelVo;
+import com.example.chatting_server.vo.response.ChannelActiveUserVo;
 import com.example.chatting_server.vo.response.FriendUserInfoVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -88,7 +90,7 @@ public class ChannelServiceImpl implements ChannelService {
                             .user(User.builder()
                                     .id(userPkId)
                                     .build())
-                            .userState(INVITE_WAIT.getCode())
+                            .userState(INVITE_ACCEPT.getCode())
                             .hideState(CHANNEL_UNHIDE.getCode())
                             .build());
 
@@ -135,6 +137,7 @@ public class ChannelServiceImpl implements ChannelService {
         return response;
     }
 
+    @Transactional
     @Override
     public ResponseVo updateChannel(String userPkId, UpdateChannel updateChannel) {
         ResponseVo response;
@@ -211,20 +214,139 @@ public class ChannelServiceImpl implements ChannelService {
         return response;
     }
 
+    @Transactional
     @Override
     public ResponseVo deleteChannel(String userPkId, String channelUrl) {
         ResponseVo response;
         Optional<Channel> channel = channelRepository.findById(channelUrl);
 
         if (channel.isPresent()) {
-            Optional<List<ChannelUser>> channelUserList = channelUserRepository.findByChannelChannelUrl(channelUrl);
-            channelUserList.ifPresent(channelUserRepository::deleteAll);
+            if (channel.get().getOwner().getId().equals(userPkId)) {
+                Optional<List<ChannelUser>> channelUserList = channelUserRepository.findByChannelChannelUrl(channelUrl);
+                channelUserList.ifPresent(channelUserRepository::deleteAll);
 
-            Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(channelUrl);
+                Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(channelUrl);
 
-            channelMetaData.ifPresent(channelMetaDataRepository::delete);
+                channelMetaData.ifPresent(channelMetaDataRepository::delete);
 
-            channelRepository.deleteById(channelUrl);
+                channelRepository.deleteById(channelUrl);
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .build();
+            } else {
+                response = ResponseVo.builder()
+                        .code(UNAUTHORIZED_CHANNEL.getCode())
+                        .message(UNAUTHORIZED_CHANNEL.getMessage())
+                        .build();
+            }
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL.getCode())
+                    .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo leaveChannel(String userPkId, String channelUrl) {
+        ResponseVo response;
+        Optional<Channel> channel = channelRepository.findById(channelUrl);
+
+        if (channel.isPresent()) {
+            Channel channelEntity = channel.get();
+
+            // 방장이 나갈 경우
+            if (channelEntity.getOwner().getId().equals(userPkId)) {
+                Optional<List<ChannelUser>> channelUserList = channelUserRepository.findByChannelChannelUrl(channelUrl);
+
+                if (channelUserList.isPresent()) {
+                    if (channelUserList.get().size() == 1) { // 혼자 있는 채널을 나갈 경우 채널 삭제
+                        channelUserList.ifPresent(channelUserRepository::deleteAll);
+
+                        Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(channelUrl);
+                        channelMetaData.ifPresent(channelMetaDataRepository::delete);
+
+                        channelRepository.deleteById(channelUrl);
+                    } else { // 방장 위임 및 channelUser 삭제
+                        ChannelUser channelOwner = null;
+
+                        for (ChannelUser channelUser : channelUserList.get()) {
+                            if (!channelUser.getUser().getId().equals(userPkId)) {
+                                channelOwner = channelUser;
+
+                                break;
+                            }
+                        }
+
+                        Optional<ChannelUser> deleteChannelUser = channelUserRepository.findByChannelChannelUrlAndUserId(channelUrl, userPkId);
+
+                        if (deleteChannelUser.isPresent() && channelOwner != null) {
+                            channelUserRepository.delete(deleteChannelUser.get());
+
+                            channelRepository.save(Channel.builder()
+                                    .channelUrl(channelEntity.getChannelUrl())
+                                    .channelName(channelEntity.getChannelName())
+                                    .createTime(channelEntity.getCreateTime())
+                                    .owner(User.builder()
+                                            .id(channelOwner.getUser().getId())
+                                            .build())
+                                    .lastMessage(channelEntity.getLastMessage())
+                                    .lastMessageTime(channelEntity.getLastMessageTime())
+                                    .build());
+                        } else {
+                            return ResponseVo.builder()
+                                    .code(NO_EXIST_CHANNEL_USER.getCode())
+                                    .message(NO_EXIST_CHANNEL_USER.getMessage())
+                                    .build();
+                        }
+                    }
+                }
+
+            } else { // 일반 유저가 나갈 경우
+                Optional<ChannelUser> deleteChannelUser = channelUserRepository.findByChannelChannelUrlAndUserId(channelUrl, userPkId);
+
+                if (deleteChannelUser.isPresent()) {
+                    channelUserRepository.delete(deleteChannelUser.get());
+                } else {
+                    return ResponseVo.builder()
+                            .code(NO_EXIST_CHANNEL_USER.getCode())
+                            .message(NO_EXIST_CHANNEL_USER.getMessage())
+                            .build();
+                }
+
+            }
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .build();
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL.getCode())
+                    .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo updateHideChannel(String userPkId, UpdateHideChannelVo updateHideChannelVo) {
+        ResponseVo response;
+        ChannelUser channelUser = channelUserRepository.getChannelUser(updateHideChannelVo.getChannelUrl(), userPkId);
+
+        if (channelUser != null) {
+            channelUserRepository.save(ChannelUser.builder()
+                    .id(channelUser.getId())
+                    .channel(channelUser.getChannel())
+                    .user(channelUser.getUser())
+                    .userState(channelUser.getUserState())
+                    .hideState(updateHideChannelVo.getHide())
+                    .build());
 
             response = ResponseVo.builder()
                     .code(SUCCESS.getCode())
@@ -240,27 +362,72 @@ public class ChannelServiceImpl implements ChannelService {
     }
 
     @Override
-    public ResponseVo leaveChannel(String userPkId, String channelUrl) {
+    public ResponseVo getChannelActiveUser(String userPkId, String channelUrl) {
+        ResponseVo response;
+        long existUserCount = channelUserRepository.checkIncludeChannelUser(channelUrl, userPkId);
+
+        if (existUserCount > 0L) {
+            List<ChannelActiveUserVo> channelUserList = channelUserRepository.getChannelUserStateList(channelUrl, INVITE_ACCEPT.getCode());
+
+            if (channelUserList != null && channelUserList.size() > 0) {
+                Map<String, Object> dataMap = new HashMap<>();
+
+                dataMap.put("channelActiveUser", channelUserList);
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .data(dataMap)
+                        .build();
+            } else {
+                response = ResponseVo.builder()
+                        .code(NO_EXIST_CHANNEL.getCode())
+                        .message(NO_EXIST_CHANNEL.getMessage())
+                        .build();
+            }
+
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL.getCode())
+                    .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+
+        return response;
+    }
+
+    @Override
+    public ResponseVo getChannelInviteUser(String userPkId, String channelUrl) {
         ResponseVo response;
         Optional<Channel> channel = channelRepository.findById(channelUrl);
 
         if (channel.isPresent()) {
             Channel channelEntity = channel.get();
 
-            // 방장이 나갈 경우
             if (channelEntity.getOwner().getId().equals(userPkId)) {
-                // TODO 다른 user에게 방장 위임 / user 삭제
-                List<ChannelUser> channelUserList = channelUserRepository.findByChannelChannelUrl(channelUrl).get();
+                List<ChannelActiveUserVo> channelUserList = channelUserRepository.getChannelUserStateList(channelUrl, INVITE_WAIT.getCode());
 
-                // 혼자 있는 채널을 나갈 경우 채널 삭제
-                if (channelUserList.size() == 1) {
+                if (channelUserList != null && channelUserList.size() > 0) {
+                    Map<String, Object> dataMap = new HashMap<>();
 
+                    dataMap.put("channelInviteUser", channelUserList);
+
+                    response = ResponseVo.builder()
+                            .code(SUCCESS.getCode())
+                            .message(SUCCESS.getMessage())
+                            .data(dataMap)
+                            .build();
                 } else {
-
+                    response = ResponseVo.builder()
+                            .code(NO_EXIST_INVITE_CHANNEL_USER.getCode())
+                            .message(NO_EXIST_INVITE_CHANNEL_USER.getMessage())
+                            .build();
                 }
-
-            } else { // 일반 유저가 나갈 경우
-                // TODO user 삭제
+            } else {
+                response = ResponseVo.builder()
+                        .code(UNAUTHORIZED_CHANNEL.getCode())
+                        .message(UNAUTHORIZED_CHANNEL.getMessage())
+                        .build();
             }
         } else {
             response = ResponseVo.builder()
@@ -268,7 +435,7 @@ public class ChannelServiceImpl implements ChannelService {
                     .message(NO_EXIST_CHANNEL.getMessage())
                     .build();
         }
-        return null;
+        return response;
     }
 
     private void batchInsertEntities(List<ChannelUser> entities) {

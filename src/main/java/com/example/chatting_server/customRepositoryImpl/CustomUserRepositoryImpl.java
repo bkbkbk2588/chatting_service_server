@@ -14,7 +14,6 @@ import static com.example.chatting_server.entity.QUser.user;
 import static com.example.chatting_server.entity.QUserFriend.userFriend;
 import static com.example.chatting_server.entity.QUserMetadata.userMetadata;
 import static com.example.chatting_server.util.ChatCode.INVITE_ACCEPT;
-import static com.example.chatting_server.util.ChatCode.USER_OK;
 
 @RequiredArgsConstructor
 public class CustomUserRepositoryImpl implements CustomUserRepository {
