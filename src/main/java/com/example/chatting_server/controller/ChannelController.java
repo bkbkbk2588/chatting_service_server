@@ -1,6 +1,7 @@
 package com.example.chatting_server.controller;
 
 import com.example.chatting_server.service.ChannelService;
+import com.example.chatting_server.vo.request.InviteChannelUserVo;
 import com.example.chatting_server.vo.request.PostChannelVo;
 import com.example.chatting_server.vo.request.UpdateChannel;
 import com.example.chatting_server.vo.request.UpdateHideChannelVo;
@@ -72,5 +73,13 @@ public class ChannelController {
     @GetMapping("/{channelUrl}/invite/list")
     public ResponseVo getChannelInviteUser(Authentication authentication, @PathVariable String channelUrl) {
         return channelService.getChannelInviteUser(String.valueOf(authentication.getCredentials()), channelUrl);
+    }
+
+    /**
+     * * 사용자 채널 초대
+     */
+    @PostMapping
+    public ResponseVo inviteChannelUser(Authentication authentication, @Valid @RequestBody InviteChannelUserVo inviteChannelUserVo) {
+        return channelService.inviteChannelUser(String.valueOf(authentication.getCredentials()), inviteChannelUserVo);
     }
 }

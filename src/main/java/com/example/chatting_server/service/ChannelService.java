@@ -1,5 +1,6 @@
 package com.example.chatting_server.service;
 
+import com.example.chatting_server.vo.request.InviteChannelUserVo;
 import com.example.chatting_server.vo.request.PostChannelVo;
 import com.example.chatting_server.vo.request.UpdateChannel;
 import com.example.chatting_server.vo.request.UpdateHideChannelVo;
@@ -14,4 +15,5 @@ public interface ChannelService {
     ResponseVo updateHideChannel(String userPkId, UpdateHideChannelVo updateHideChannelVo);
     ResponseVo getChannelActiveUser(String userPkId, String channelUrl);
     ResponseVo getChannelInviteUser(String userPkId, String channelUrl);
+    ResponseVo inviteChannelUser(String userPkId, InviteChannelUserVo inviteChannelUserVo);
 }

@@ -9,6 +9,7 @@ import com.example.chatting_server.repository.ChannelRepository;
 import com.example.chatting_server.repository.ChannelUserRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.service.ChannelService;
+import com.example.chatting_server.vo.request.InviteChannelUserVo;
 import com.example.chatting_server.vo.request.PostChannelVo;
 import com.example.chatting_server.vo.request.UpdateChannel;
 import com.example.chatting_server.vo.request.UpdateHideChannelVo;
@@ -436,6 +437,33 @@ public class ChannelServiceImpl implements ChannelService {
                     .build();
         }
         return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo inviteChannelUser(String userPkId, InviteChannelUserVo inviteChannelUserVo) {
+        ResponseVo response;
+        Optional<Channel> channel = channelRepository.findById(inviteChannelUserVo.getChannelUrl());
+
+        if (channel.isPresent()) {
+            Channel channelEntity = channel.get();
+
+            if (channelEntity.getOwner().getId().equals(userPkId)) {
+
+            } else {
+                response = ResponseVo.builder()
+                        .code(UNAUTHORIZED_CHANNEL.getCode())
+                        .message(UNAUTHORIZED_CHANNEL.getMessage())
+                        .build();
+            }
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL.getCode())
+                    .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+
+        return null;
     }
 
     private void batchInsertEntities(List<ChannelUser> entities) {
