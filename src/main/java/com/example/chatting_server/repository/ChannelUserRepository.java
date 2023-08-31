@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface ChannelUserRepository extends JpaRepository<ChannelUser, String>, CustomChannelUserRepository {
     Optional<List<ChannelUser>> findByChannelChannelUrl(String channelUrl);
     Optional<ChannelUser> findByChannelChannelUrlAndUserId(String channelUrl, String id);
+    Optional<List<ChannelUser>> findByUserIdAndUserState(String id, int userState);
 }

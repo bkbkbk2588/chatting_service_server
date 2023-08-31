@@ -1,10 +1,7 @@
 package com.example.chatting_server.controller;
 
 import com.example.chatting_server.service.ChannelService;
-import com.example.chatting_server.vo.request.InviteChannelUserVo;
-import com.example.chatting_server.vo.request.PostChannelVo;
-import com.example.chatting_server.vo.request.UpdateChannel;
-import com.example.chatting_server.vo.request.UpdateHideChannelVo;
+import com.example.chatting_server.vo.request.*;
 import com.example.chatting_server.vo.response.ResponseVo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +9,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+
+import static com.example.chatting_server.util.ChatCode.INVITE_ACCEPT;
+import static com.example.chatting_server.util.ChatCode.INVITE_REFUSE;
 
 @RestController
 @RequestMapping("/channel")
@@ -68,11 +68,19 @@ public class ChannelController {
     }
 
     /**
-     * * 초대 목록 조회(방장 권한)
+     * * 채널 초대 유저 상태 조회(방장 권한)
      */
     @GetMapping("/{channelUrl}/invite/list")
     public ResponseVo getChannelInviteUser(Authentication authentication, @PathVariable String channelUrl) {
         return channelService.getChannelInviteUser(String.valueOf(authentication.getCredentials()), channelUrl);
+    }
+
+    /**
+     * * 초대 목록 조회
+     */
+    @GetMapping("/invite/list")
+    public ResponseVo getInviteChannelList(Authentication authentication) {
+        return channelService.getInviteChannelList(String.valueOf(authentication.getCredentials()));
     }
 
     /**
@@ -81,5 +89,21 @@ public class ChannelController {
     @PostMapping("/invite")
     public ResponseVo inviteChannelUser(Authentication authentication, @Valid @RequestBody InviteChannelUserVo inviteChannelUserVo) {
         return channelService.inviteChannelUser(String.valueOf(authentication.getCredentials()), inviteChannelUserVo);
+    }
+
+    /**
+     * * 사용자 채널 초대 수락
+     */
+    @PutMapping("/invite/accept")
+    public ResponseVo inviteAcceptChannelUser(Authentication authentication, @Valid @RequestBody ChannelUserIdVo channelUserIdVo) {
+        return channelService.updateInviteChannelUser(String.valueOf(authentication.getCredentials()), channelUserIdVo, INVITE_ACCEPT.getCode());
+    }
+
+    /**
+     * * 사용자 채널 초대 거절
+     */
+    @DeleteMapping("/invite/refuse")
+    public ResponseVo inviteRefuseChannelUser(Authentication authentication, @Valid @RequestBody ChannelUserIdVo channelUserIdVo) {
+        return channelService.updateInviteChannelUser(String.valueOf(authentication.getCredentials()), channelUserIdVo, INVITE_REFUSE.getCode());
     }
 }

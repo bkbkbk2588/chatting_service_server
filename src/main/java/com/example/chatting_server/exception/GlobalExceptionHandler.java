@@ -4,6 +4,7 @@ import com.example.chatting_server.vo.response.ResponseVo;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -92,6 +93,18 @@ public class GlobalExceptionHandler {
         ResponseVo responseVo = ResponseVo.builder()
                 .code(NO_REQUIRED_PARAM.getCode())
                 .message(NO_REQUIRED_PARAM.getMessage() + " (" + ex.getParameterName() + ")")
+                .build();
+
+        return ResponseEntity.badRequest().body(responseVo);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ResponseVo> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        log.error("DataIntegrityViolationException Error");
+
+        ResponseVo responseVo = ResponseVo.builder()
+                .code(DB_COMMIT_FAIL.getCode())
+                .message(DB_COMMIT_FAIL.getMessage())
                 .build();
 
         return ResponseEntity.badRequest().body(responseVo);

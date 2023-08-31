@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum ChatCode {
     INVITE_WAIT(0),
     INVITE_ACCEPT(1),
+    INVITE_REFUSE(2),
 
     USER_OK(0),
     USER_SUSPENSION(1),

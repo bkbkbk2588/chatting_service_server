@@ -9,12 +9,10 @@ import com.example.chatting_server.repository.ChannelRepository;
 import com.example.chatting_server.repository.ChannelUserRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.service.ChannelService;
-import com.example.chatting_server.vo.request.InviteChannelUserVo;
-import com.example.chatting_server.vo.request.PostChannelVo;
-import com.example.chatting_server.vo.request.UpdateChannel;
-import com.example.chatting_server.vo.request.UpdateHideChannelVo;
+import com.example.chatting_server.vo.request.*;
 import com.example.chatting_server.vo.response.ChannelActiveUserVo;
 import com.example.chatting_server.vo.response.FriendUserInfoVo;
+import com.example.chatting_server.vo.response.InviteChannelVo;
 import com.example.chatting_server.vo.response.ResponseVo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -439,6 +437,30 @@ public class ChannelServiceImpl implements ChannelService {
         return response;
     }
 
+    @Override
+    public ResponseVo getInviteChannelList(String userPkId) {
+        List<InviteChannelVo> channelUserList = channelUserRepository.getInviteChannelList(userPkId, INVITE_WAIT.getCode());
+        ResponseVo response;
+
+        if (channelUserList != null && channelUserList.size() > 0) {
+            Map<String, Object> dataMap = new HashMap<>();
+
+            dataMap.put("inviteChannelList", channelUserList);
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .data(dataMap)
+                    .build();
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_INVITE_CHANNEL.getCode())
+                    .message(NO_EXIST_INVITE_CHANNEL.getMessage())
+                    .build();
+        }
+        return response;
+    }
+
     @Transactional
     @Override
     public ResponseVo inviteChannelUser(String userPkId, InviteChannelUserVo inviteChannelUserVo) {
@@ -453,6 +475,7 @@ public class ChannelServiceImpl implements ChannelService {
 
                 Optional<List<User>> inviteUserList = userRepository.findByNickNameInAndUserStatus(inviteChannelUserVo.getInviteNickNameList(), USER_OK.getCode());
 
+                // 유저가 있을 경우
                 if (inviteUserList.isPresent()) {
                     if (inviteUserList.get().size() != inviteChannelUserVo.getInviteNickNameList().size()) {
                         response = ResponseVo.builder()
@@ -473,28 +496,37 @@ public class ChannelServiceImpl implements ChannelService {
                                     .message(NO_EXIST_FRIEND.getMessage())
                                     .build();
                         } else { // 친구 목록에 초대한 유저가 다 있을 경우
-                            List<ChannelUser> channelUserList = new ArrayList<>();
+                            long channelInviteUserCount = channelUserRepository.getChannelInviteUser(inviteUserIdList, inviteChannelUserVo.getChannelUrl());
 
-                            // TODO 이미 채널에 참가중인 유저인지 확인 로직 추가 필요
-                            // 초대 받은 사람 추가
-                            for (FriendUserInfoVo friendUserInfo : friendUserInfoList) {
-                                channelUserList.add(ChannelUser.builder()
-                                        .channel(channelEntity)
-                                        .user(User.builder()
-                                                .id(friendUserInfo.getFriendId())
-                                                .build())
-                                        .userState(INVITE_WAIT.getCode())
-                                        .hideState(CHANNEL_UNHIDE.getCode())
-                                        .build());
+                            // 이미 초대 되어 있는 경우
+                            if (channelInviteUserCount > 0L && channelInviteUserCount == inviteUserIdList.size()) {
+                                response = ResponseVo.builder()
+                                        .code(EXIST_INVITE_CHANNEL_USER.getCode())
+                                        .message(EXIST_INVITE_CHANNEL_USER.getMessage())
+                                        .build();
+                            } else {
+                                List<ChannelUser> channelUserList = new ArrayList<>();
+
+                                // 초대 받은 사람 추가
+                                for (FriendUserInfoVo friendUserInfo : friendUserInfoList) {
+                                    channelUserList.add(ChannelUser.builder()
+                                            .channel(channelEntity)
+                                            .user(User.builder()
+                                                    .id(friendUserInfo.getFriendId())
+                                                    .build())
+                                            .userState(INVITE_WAIT.getCode())
+                                            .hideState(CHANNEL_UNHIDE.getCode())
+                                            .build());
+                                }
+
+                                batchInsertEntities(channelUserList);
+
+                                response = ResponseVo.builder()
+                                        .code(SUCCESS.getCode())
+                                        .message(SUCCESS.getMessage())
+                                        .build();
                             }
-
-                            batchInsertEntities(channelUserList);
                         }
-
-                        response = ResponseVo.builder()
-                                .code(SUCCESS.getCode())
-                                .message(SUCCESS.getMessage())
-                                .build();
                     }
                 } else {
                     response = ResponseVo.builder()
@@ -512,6 +544,53 @@ public class ChannelServiceImpl implements ChannelService {
             response = ResponseVo.builder()
                     .code(NO_EXIST_CHANNEL.getCode())
                     .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo updateInviteChannelUser(String userPkId, ChannelUserIdVo channelUserIdVo, int userState) {
+        Optional<ChannelUser> channelUser = channelUserRepository.findById(channelUserIdVo.getChannelUserId());
+        ResponseVo response;
+
+        if (channelUser.isPresent()) {
+            ChannelUser channelUserEntity = channelUser.get();
+
+            if (channelUserEntity.getUser().getId().equals(userPkId) && channelUserEntity.getUserState() == INVITE_WAIT.getCode()) {
+                if (userState == INVITE_ACCEPT.getCode()) {
+                    channelUserRepository.save(ChannelUser.builder()
+                            .id(channelUserEntity.getId())
+                            .channel(channelUserEntity.getChannel())
+                            .user(channelUserEntity.getUser())
+                            .userState(INVITE_ACCEPT.getCode())
+                            .hideState(channelUserEntity.getHideState())
+                            .build());
+                } else if (userState == INVITE_REFUSE.getCode()) {
+                    channelUserRepository.delete(channelUserEntity);
+                }
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .build();
+            } else if (channelUserEntity.getUserState() != INVITE_WAIT.getCode()) {
+                response = ResponseVo.builder()
+                        .code(EXIST_INVITE_CHANNEL_USER.getCode())
+                        .message(EXIST_INVITE_CHANNEL_USER.getMessage())
+                        .build();
+            } else {
+                response = ResponseVo.builder()
+                        .code(UNAUTHORIZED_INVITE_CHANNEL_USER.getCode())
+                        .message(UNAUTHORIZED_INVITE_CHANNEL_USER.getMessage())
+                        .build();
+            }
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_INVITE_CHANNEL_USER.getCode())
+                    .message(NO_EXIST_INVITE_CHANNEL_USER.getMessage())
                     .build();
         }
 

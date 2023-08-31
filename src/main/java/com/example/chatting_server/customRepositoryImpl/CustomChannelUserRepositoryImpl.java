@@ -9,6 +9,7 @@ import static com.example.chatting_server.entity.QUser.user;
 import static com.example.chatting_server.util.ChatCode.INVITE_ACCEPT;
 
 import com.example.chatting_server.vo.response.ChannelActiveUserVo;
+import com.example.chatting_server.vo.response.InviteChannelVo;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -52,5 +53,27 @@ public class CustomChannelUserRepositoryImpl implements CustomChannelUserReposit
                         .and(channelUser.user.id.eq(id))
                         .and(channelUser.userState.eq(INVITE_ACCEPT.getCode())))
                 .fetchFirst();
+    }
+
+    @Override
+    public long getChannelInviteUser(List<String> inviteUserIdList, String channelUrl) {
+        return queryFactory.select(channelUser.count())
+                .from(channelUser)
+                .where(channelUser.user.id.in(inviteUserIdList)
+                        .and(channelUser.channel.channelUrl.eq(channelUrl)))
+                .fetchFirst();
+    }
+
+    @Override
+    public List<InviteChannelVo> getInviteChannelList(String id, int userState) {
+        return queryFactory.select(Projections.constructor(InviteChannelVo.class,
+                channelUser.id,
+                channelUser.channel.channelUrl,
+                channelUser.userState
+                ))
+                .from(channelUser)
+                .where(channelUser.user.id.eq(id)
+                        .and(channelUser.userState.eq(userState)))
+                .fetch();
     }
 }
