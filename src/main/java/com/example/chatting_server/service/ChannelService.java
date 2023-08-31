@@ -15,4 +15,6 @@ public interface ChannelService {
     ResponseVo getInviteChannelList(String userPkId);
     ResponseVo inviteChannelUser(String userPkId, InviteChannelUserVo inviteChannelUserVo);
     ResponseVo updateInviteChannelUser(String userPkId, ChannelUserIdVo channelUserIdVo, int userState);
+    ResponseVo postChannelMetadata(String userPkId, ChannelMetadataVo channelMetadataVo);
+    ResponseVo updateChannelMetadata(String userPkId, ChannelMetadataVo channelMetadataVo);
 }

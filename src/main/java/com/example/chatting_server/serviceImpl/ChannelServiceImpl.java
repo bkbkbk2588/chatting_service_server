@@ -597,6 +597,67 @@ public class ChannelServiceImpl implements ChannelService {
         return response;
     }
 
+    @Override
+    public ResponseVo postChannelMetadata(String userPkId, ChannelMetadataVo channelMetadataVo) {
+        ResponseVo response;
+        try {
+            Optional<Channel> channel = channelRepository.findById(channelMetadataVo.getChannelUrl());
+
+            if (channel.isPresent()) {
+                Channel channelEntity = channel.get();
+
+                // 방장 권한 체크
+                if (channelEntity.getOwner().getId().equals(userPkId)) {
+                    Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(channelMetadataVo.getChannelUrl());
+
+                    if (channelMetaData.isPresent()) {
+                        response = ResponseVo.builder()
+                                .code(EXIST_CHANNEL_METADATA.getCode())
+                                .message(EXIST_CHANNEL_METADATA.getMessage())
+                                .build();
+                    } else { // 메타 데이터 추가
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        String metadata = objectMapper.writeValueAsString(channelMetadataVo.getMetadata());
+
+                        channelMetaDataRepository.save(ChannelMetaData.builder()
+                                .channel(channelEntity)
+                                .metadata(metadata)
+                                .build());
+
+                        response = ResponseVo.builder()
+                                .code(SUCCESS.getCode())
+                                .message(SUCCESS.getMessage())
+                                .build();
+                    }
+                } else {
+                    response = ResponseVo.builder()
+                            .code(UNAUTHORIZED_CHANNEL.getCode())
+                            .message(UNAUTHORIZED_CHANNEL.getMessage())
+                            .build();
+                }
+            } else {
+                response = ResponseVo.builder()
+                        .code(NO_EXIST_CHANNEL.getCode())
+                        .message(NO_EXIST_CHANNEL.getMessage())
+                        .build();
+            }
+        } catch (JsonProcessingException exception) {
+            response = ResponseVo.builder()
+                    .code(JSON_PARSE_ERROR.getCode())
+                    .message(JSON_PARSE_ERROR.getMessage())
+                    .build();
+        }
+
+        return response;
+    }
+
+    @Override
+    public ResponseVo updateChannelMetadata(String userPkId, ChannelMetadataVo channelMetadataVo) {
+
+        // TODO 등록 수정 메소드 합치기기
+       return null;
+    }
+
     private void batchInsertEntities(List<ChannelUser> entities) {
 
         for (int i = 0; i < entities.size(); i++) {

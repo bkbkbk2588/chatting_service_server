@@ -40,6 +40,7 @@ public enum ResponseCode {
     EXIST_INVITE_CHANNEL_USER(4004, "EXIST_INVITE_CHANNEL_USER", "Exist Invite Channel User"),
     NO_EXIST_INVITE_CHANNEL(4005, "NO_EXIST_INVITE_CHANNEL", "No Exist Invite Channel"),
     UNAUTHORIZED_INVITE_CHANNEL_USER(4006, "UNAUTHORIZED_INVITE_CHANNEL_USER", "Unauthorized Invite Channel User"),
+    EXIST_CHANNEL_METADATA(4007, "EXIST_CHANNEL_METADATA", "Exist Channel Metadata"),
 
     // DB : 7000
     DB_COMMIT_FAIL(7000, "DB_COMMIT_FAIL", "Db Commit Fail"),

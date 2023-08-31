@@ -106,4 +106,20 @@ public class ChannelController {
     public ResponseVo inviteRefuseChannelUser(Authentication authentication, @Valid @RequestBody ChannelUserIdVo channelUserIdVo) {
         return channelService.updateInviteChannelUser(String.valueOf(authentication.getCredentials()), channelUserIdVo, INVITE_REFUSE.getCode());
     }
+
+    /**
+     * * 채널 메타 데이터 추가
+     */
+    @PostMapping("/metadata")
+    public ResponseVo postChannelMetadata(Authentication authentication, @Valid @RequestBody ChannelMetadataVo channelMetadataVo) {
+        return channelService.postChannelMetadata(String.valueOf(authentication.getCredentials()), channelMetadataVo);
+    }
+
+    /**
+     * * 채널 메타 데이터 수정
+     */
+    @PutMapping("/metadata")
+    public ResponseVo updateChannelMetadata(Authentication authentication, @Valid @RequestBody ChannelMetadataVo channelMetadataVo) {
+        return channelService.updateChannelMetadata(String.valueOf(authentication.getCredentials()), channelMetadataVo);
+    }
 }
