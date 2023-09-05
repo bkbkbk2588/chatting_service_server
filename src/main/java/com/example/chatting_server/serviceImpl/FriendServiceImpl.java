@@ -38,27 +38,35 @@ public class FriendServiceImpl implements FriendService {
                     .message(NO_EXIST_USER.getMessage())
                     .build();
         } else {
-            Optional<UserFriend> userFriend = userFriendRepository.findByOwnerUserIdAndFriendUserId(id, user.getId());
-
-            if (userFriend.isPresent()) {
+            if (id.equals(user.getId())) {
                 response = ResponseVo.builder()
-                        .code(ALREADY_EXIST_REQUEST_FRIEND.getCode())
-                        .message(ALREADY_EXIST_REQUEST_FRIEND.getMessage())
+                        .code(NO_ME_REQUEST_FRIEND.getCode())
+                        .message(NO_ME_REQUEST_FRIEND.getMessage())
                         .build();
             } else {
-                userFriendRepository.save(UserFriend.builder()
-                        .ownerUser(User.builder()
-                                .id(id)
-                                .build())
-                        .friendUser(user)
-                        .userStatus(INVITE_WAIT.getCode())
-                        .inviteTime(LocalDateTime.now())
-                        .build());
 
-                response = ResponseVo.builder()
-                        .code(SUCCESS.getCode())
-                        .message(SUCCESS.getMessage())
-                        .build();
+                Optional<UserFriend> userFriend = userFriendRepository.findByOwnerUserIdAndFriendUserId(id, user.getId());
+
+                if (userFriend.isPresent()) {
+                    response = ResponseVo.builder()
+                            .code(ALREADY_EXIST_REQUEST_FRIEND.getCode())
+                            .message(ALREADY_EXIST_REQUEST_FRIEND.getMessage())
+                            .build();
+                } else {
+                    userFriendRepository.save(UserFriend.builder()
+                            .ownerUser(User.builder()
+                                    .id(id)
+                                    .build())
+                            .friendUser(user)
+                            .userStatus(INVITE_WAIT.getCode())
+                            .inviteTime(LocalDateTime.now())
+                            .build());
+
+                    response = ResponseVo.builder()
+                            .code(SUCCESS.getCode())
+                            .message(SUCCESS.getMessage())
+                            .build();
+                }
             }
         }
 

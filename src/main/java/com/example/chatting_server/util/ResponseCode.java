@@ -27,6 +27,7 @@ public enum ResponseCode {
     ALREADY_EXIST_REQUEST_FRIEND(2009, "ALREADY_EXIST_REQUEST_FRIEND", "Already Exist Request Friend"),
     NO_EXIST_FRIEND(2010, "NO_EXIST_FRIEND", "No Exist Friend"),
     UNAUTHORIZED_FRIEND(2011, "UNAUTHORIZED_FRIEND", "Unauthorized Friend"),
+    NO_ME_REQUEST_FRIEND(2012, "NO_ME_REQUEST_FRIEND", "No me Request Friend"),
 
     // TOKEN : 3000
     INVALID_REFRESH_TOKEN(3000, "INVALID_REFRESH_TOKEN", "Invalid Refresh Token"),
@@ -41,6 +42,7 @@ public enum ResponseCode {
     NO_EXIST_INVITE_CHANNEL(4005, "NO_EXIST_INVITE_CHANNEL", "No Exist Invite Channel"),
     UNAUTHORIZED_INVITE_CHANNEL_USER(4006, "UNAUTHORIZED_INVITE_CHANNEL_USER", "Unauthorized Invite Channel User"),
     EXIST_CHANNEL_METADATA(4007, "EXIST_CHANNEL_METADATA", "Exist Channel Metadata"),
+    NO_EXIST_CHANNEL_METADATA(4008, "NO_EXIST_CHANNEL_METADATA", "No Exist Channel Metadata"),
 
     // DB : 7000
     DB_COMMIT_FAIL(7000, "DB_COMMIT_FAIL", "Db Commit Fail"),
