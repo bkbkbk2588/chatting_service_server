@@ -10,10 +10,7 @@ import com.example.chatting_server.repository.ChannelUserRepository;
 import com.example.chatting_server.repository.UserRepository;
 import com.example.chatting_server.service.ChannelService;
 import com.example.chatting_server.vo.request.*;
-import com.example.chatting_server.vo.response.ChannelActiveUserVo;
-import com.example.chatting_server.vo.response.FriendUserInfoVo;
-import com.example.chatting_server.vo.response.InviteChannelVo;
-import com.example.chatting_server.vo.response.ResponseVo;
+import com.example.chatting_server.vo.response.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +40,12 @@ public class ChannelServiceImpl implements ChannelService {
 
     private final String CHANNEL_NAME = "Channel Name";
     private final String CHANNEL_URL = "ChannelURL";
+
+    @Override
+    public ResponseVo getChannelList(String userPkId, ChannelListVo channelListVo) {
+
+        return null;
+    }
 
     @Transactional
     @Override
@@ -598,7 +601,7 @@ public class ChannelServiceImpl implements ChannelService {
     }
 
     @Override
-    public ResponseVo postChannelMetadata(String userPkId, ChannelMetadataVo channelMetadataVo) {
+    public ResponseVo postOrUpdateChannelMetadata(String userPkId, ChannelMetadataVo channelMetadataVo, boolean update) {
         ResponseVo response;
         try {
             Optional<Channel> channel = channelRepository.findById(channelMetadataVo.getChannelUrl());
@@ -610,24 +613,48 @@ public class ChannelServiceImpl implements ChannelService {
                 if (channelEntity.getOwner().getId().equals(userPkId)) {
                     Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(channelMetadataVo.getChannelUrl());
 
-                    if (channelMetaData.isPresent()) {
-                        response = ResponseVo.builder()
-                                .code(EXIST_CHANNEL_METADATA.getCode())
-                                .message(EXIST_CHANNEL_METADATA.getMessage())
-                                .build();
+                    if (update) { // 메타 데이터 수정
+                        if (channelMetaData.isPresent()) {
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            String metadata = objectMapper.writeValueAsString(channelMetadataVo.getMetadata());
+
+                            channelMetaDataRepository.save(ChannelMetaData.builder()
+                                    .id(channelMetaData.get().getId())
+                                    .channel(channelMetaData.get().getChannel())
+                                    .metadata(metadata)
+                                    .build());
+
+                            response = ResponseVo.builder()
+                                    .code(SUCCESS.getCode())
+                                    .message(SUCCESS.getMessage())
+                                    .build();
+                        } else {
+                            response = ResponseVo.builder()
+                                    .code(NO_EXIST_CHANNEL_METADATA.getCode())
+                                    .message(NO_EXIST_CHANNEL_METADATA.getMessage())
+                                    .build();
+                        }
                     } else { // 메타 데이터 추가
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        String metadata = objectMapper.writeValueAsString(channelMetadataVo.getMetadata());
+                        if (channelMetaData.isPresent()) {
 
-                        channelMetaDataRepository.save(ChannelMetaData.builder()
-                                .channel(channelEntity)
-                                .metadata(metadata)
-                                .build());
+                            response = ResponseVo.builder()
+                                    .code(EXIST_CHANNEL_METADATA.getCode())
+                                    .message(EXIST_CHANNEL_METADATA.getMessage())
+                                    .build();
+                        } else { // 메타 데이터 추가
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            String metadata = objectMapper.writeValueAsString(channelMetadataVo.getMetadata());
 
-                        response = ResponseVo.builder()
-                                .code(SUCCESS.getCode())
-                                .message(SUCCESS.getMessage())
-                                .build();
+                            channelMetaDataRepository.save(ChannelMetaData.builder()
+                                    .channel(channelEntity)
+                                    .metadata(metadata)
+                                    .build());
+
+                            response = ResponseVo.builder()
+                                    .code(SUCCESS.getCode())
+                                    .message(SUCCESS.getMessage())
+                                    .build();
+                        }
                     }
                 } else {
                     response = ResponseVo.builder()
@@ -652,10 +679,93 @@ public class ChannelServiceImpl implements ChannelService {
     }
 
     @Override
-    public ResponseVo updateChannelMetadata(String userPkId, ChannelMetadataVo channelMetadataVo) {
+    public ResponseVo getChannelMetadata(String userPkId, String channelUrl) {
+        Optional<ChannelMetaData> channelMetaData = channelMetaDataRepository.findByChannelChannelUrl(channelUrl);
+        ResponseVo response;
 
-        // TODO 등록 수정 메소드 합치기기
-       return null;
+        if (channelMetaData.isPresent()) {
+            List<ChannelActiveUserVo> channelUserList = channelUserRepository.getChannelUserStateList(channelUrl, INVITE_ACCEPT.getCode());
+            Set<String> channelUserSet = channelUserList.stream()
+                    .map(ChannelActiveUserVo::getUserId)
+                    .collect(Collectors.toSet());
+
+            if (channelUserSet.size() > 0 && channelUserSet.contains(userPkId)) {
+                try {
+                    ChannelMetaData channelMetaDataEntity = channelMetaData.get();
+                    Map<String, Object> dataMap = new HashMap<>();
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    Map<String, Object> metadata = objectMapper.readValue(channelMetaDataEntity.getMetadata(), Map.class);
+
+                    dataMap.put("channelMetadata", ChannelMetadataInfoVo.builder()
+                            .channelMetadataId(channelMetaDataEntity.getId())
+                            .channelUrl(channelMetaDataEntity.getChannel().getChannelUrl())
+                            .metadata(metadata)
+                            .build());
+
+                    response = ResponseVo.builder()
+                            .code(SUCCESS.getCode())
+                            .message(SUCCESS.getMessage())
+                            .data(dataMap)
+                            .build();
+                } catch (JsonProcessingException exception) {
+                    response = ResponseVo.builder()
+                            .code(JSON_PARSE_ERROR.getCode())
+                            .message(JSON_PARSE_ERROR.getMessage())
+                            .build();
+                }
+
+            } else {
+                response = ResponseVo.builder()
+                        .code(NO_EXIST_CHANNEL_METADATA.getCode())
+                        .message(NO_EXIST_CHANNEL_METADATA.getMessage())
+                        .build();
+            }
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL_METADATA.getCode())
+                    .message(NO_EXIST_CHANNEL_METADATA.getMessage())
+                    .build();
+        }
+
+        return response;
+    }
+
+    @Transactional
+    @Override
+    public ResponseVo deleteChannelMetadata(String userPkId, String channelUrl) {
+        ResponseVo response;
+        ChannelAndMetadataInfoVo channelMetadataInfo = channelMetaDataRepository.getChannelMetadata(channelUrl);
+
+        if (channelMetadataInfo.getChannelUrl() != null) {
+            if (channelMetadataInfo.getUserPkId().equals(userPkId)) {
+                if (channelMetadataInfo.getChannelMetadataId() != null) {
+                    channelMetaDataRepository.deleteById(channelMetadataInfo.getChannelMetadataId());
+
+                    response = ResponseVo.builder()
+                            .code(SUCCESS.getCode())
+                            .message(SUCCESS.getMessage())
+                            .build();
+                } else {
+                    response = ResponseVo.builder()
+                            .code(NO_EXIST_CHANNEL_METADATA.getCode())
+                            .message(NO_EXIST_CHANNEL_METADATA.getMessage())
+                            .build();
+                }
+            } else {
+                response = ResponseVo.builder()
+                        .code(UNAUTHORIZED_CHANNEL.getCode())
+                        .message(UNAUTHORIZED_CHANNEL.getMessage())
+                        .build();
+            }
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_EXIST_CHANNEL.getCode())
+                    .message(NO_EXIST_CHANNEL.getMessage())
+                    .build();
+        }
+
+        return response;
     }
 
     private void batchInsertEntities(List<ChannelUser> entities) {

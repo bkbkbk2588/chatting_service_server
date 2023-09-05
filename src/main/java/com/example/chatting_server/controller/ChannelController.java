@@ -20,6 +20,14 @@ public class ChannelController {
     final ChannelService channelService;
 
     /**
+     * * 채널 목록 조회
+     */
+    @GetMapping("/list")
+    public ResponseVo getChannelList(Authentication authentication, @ModelAttribute ChannelListVo channelListVo) {
+        return channelService.getChannelList(String.valueOf(authentication.getCredentials()), channelListVo);
+    }
+
+    /**
      * * 채널 생성(방장 권한)
      */
     @PostMapping
@@ -112,14 +120,31 @@ public class ChannelController {
      */
     @PostMapping("/metadata")
     public ResponseVo postChannelMetadata(Authentication authentication, @Valid @RequestBody ChannelMetadataVo channelMetadataVo) {
-        return channelService.postChannelMetadata(String.valueOf(authentication.getCredentials()), channelMetadataVo);
+        return channelService.postOrUpdateChannelMetadata(String.valueOf(authentication.getCredentials()), channelMetadataVo, false);
     }
+
+    /**
+     * * 채널 메타 데이터 조회
+     */
+    @GetMapping("/metadata/{channelUrl}")
+    public ResponseVo getChannelMetadata(Authentication authentication, @PathVariable String channelUrl) {
+        return channelService.getChannelMetadata(String.valueOf(authentication.getCredentials()), channelUrl);
+    }
+
 
     /**
      * * 채널 메타 데이터 수정
      */
     @PutMapping("/metadata")
     public ResponseVo updateChannelMetadata(Authentication authentication, @Valid @RequestBody ChannelMetadataVo channelMetadataVo) {
-        return channelService.updateChannelMetadata(String.valueOf(authentication.getCredentials()), channelMetadataVo);
+        return channelService.postOrUpdateChannelMetadata(String.valueOf(authentication.getCredentials()), channelMetadataVo, true);
+    }
+
+    /**
+     * * 채널 메타 데이터 삭제
+     */
+    @DeleteMapping("/metadata/{channelUrl}")
+    public ResponseVo deleteChannelMetadata(Authentication authentication, @PathVariable String channelUrl) {
+        return channelService.deleteChannelMetadata(String.valueOf(authentication.getCredentials()), channelUrl);
     }
 }
