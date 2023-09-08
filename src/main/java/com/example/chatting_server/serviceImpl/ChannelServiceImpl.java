@@ -43,6 +43,13 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Override
     public ResponseVo getChannelList(String userPkId, ChannelListVo channelListVo) {
+        List<ChannelInfoResultVo> channelInfoList = channelRepository.getChannelList(userPkId, channelListVo);
+
+        for (ChannelInfoResultVo a : channelInfoList) {
+            System.out.println(a.getChannelUrl() + " " + a.getCreateTime() + " " + a.getOwnerNickname() + " " + a.getChannelName()
+                    + " " + a.getLastMessage() + " " + a.getLastMessageTime() + " " + a.getChannelMetadataId()
+                    + " " + a.getChannelMetadata());
+        }
 
         return null;
     }
