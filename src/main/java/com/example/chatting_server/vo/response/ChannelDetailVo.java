@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ChannelInfoResultVo {
+public class ChannelDetailVo {
     private String channelUrl;
     private LocalDateTime createTime;
     private String ownerNickname;
@@ -18,4 +18,5 @@ public class ChannelInfoResultVo {
     private LocalDateTime lastMessageTime;
     private String channelMetadata;
     private String channelMetadataId;
+    private String nickname;
 }

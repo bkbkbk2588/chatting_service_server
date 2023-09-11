@@ -28,6 +28,14 @@ public class ChannelController {
     }
 
     /**
+     * * 채널 상세 조회
+     */
+    @GetMapping("/{channelUrl}")
+    public ResponseVo getChannel(Authentication authentication, @PathVariable String channelUrl) {
+        return channelService.getChannel(String.valueOf(authentication.getCredentials()), channelUrl);
+    }
+
+    /**
      * * 채널 생성(방장 권한)
      */
     @PostMapping

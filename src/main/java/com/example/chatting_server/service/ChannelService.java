@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface ChannelService {
     ResponseVo getChannelList(String userPkId, ChannelListVo channelListVo);
+    ResponseVo getChannel(String userPkId, String channelUrl);
     ResponseVo postChannel(String userPkId, PostChannelVo postChannelVo);
     ResponseVo updateChannel(String userPkId, UpdateChannel updateChannel) throws JsonProcessingException;
     ResponseVo deleteChannel(String userPkId, String channelUrl);

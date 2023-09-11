@@ -10,6 +10,5 @@ public class ChannelListVo {
     private int size;
     private String createdAfter;
     private String createBefore;
-    private String members;
     private String channelName;
 }

@@ -44,14 +44,82 @@ public class ChannelServiceImpl implements ChannelService {
     @Override
     public ResponseVo getChannelList(String userPkId, ChannelListVo channelListVo) {
         List<ChannelInfoResultVo> channelInfoList = channelRepository.getChannelList(userPkId, channelListVo);
+        ResponseVo response;
 
-        for (ChannelInfoResultVo a : channelInfoList) {
-            System.out.println(a.getChannelUrl() + " " + a.getCreateTime() + " " + a.getOwnerNickname() + " " + a.getChannelName()
-                    + " " + a.getLastMessage() + " " + a.getLastMessageTime() + " " + a.getChannelMetadataId()
-                    + " " + a.getChannelMetadata());
+        if (channelInfoList.size() > 0) {
+            Map<String, Object> data = new HashMap<>();
+
+            data.put("channelList", channelInfoList);
+
+            response = ResponseVo.builder()
+                    .code(SUCCESS.getCode())
+                    .message(SUCCESS.getMessage())
+                    .data(data)
+                    .build();
+        } else {
+            response = ResponseVo.builder()
+                    .code(NO_CONTENT.getCode())
+                    .message(NO_CONTENT.getMessage())
+                    .build();
         }
 
-        return null;
+
+        return response;
+    }
+
+    @Override
+    public ResponseVo getChannel(String userPkId, String channelUrl) {
+        List<ChannelDetailVo> channelDetail = channelRepository.getChannelDetail(userPkId, channelUrl);
+        ResponseVo response;
+
+        try {
+            if (channelDetail.size() > 0) {
+                int index = 0;
+                List<String> nicknameList = channelDetail.stream()
+                        .map(ChannelDetailVo::getNickname)
+                        .collect(Collectors.toList());
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> metadata = null;
+
+                if (channelDetail.get(index).getChannelMetadata() != null) {
+                    metadata = objectMapper.readValue(channelDetail.get(index).getChannelMetadata(), Map.class);
+                }
+
+                ChannelDetailInfoVo channelDetailInfo = ChannelDetailInfoVo.builder()
+                        .channelUrl(channelDetail.get(index).getChannelUrl())
+                        .createTime(channelDetail.get(index).getCreateTime())
+                        .ownerNickname(channelDetail.get(index).getOwnerNickname())
+                        .channelName(channelDetail.get(index).getChannelName())
+                        .lastMessage(channelDetail.get(index).getLastMessage())
+                        .lastMessageTime(channelDetail.get(index).getLastMessageTime())
+                        .channelMetadata(metadata)
+                        .channelMetadataId(channelDetail.get(index).getChannelMetadataId())
+                        .members(nicknameList)
+                        .build();
+
+                Map<String, Object> data = new HashMap<>();
+
+                data.put("channelInfo", channelDetailInfo);
+
+                response = ResponseVo.builder()
+                        .code(SUCCESS.getCode())
+                        .message(SUCCESS.getMessage())
+                        .data(data)
+                        .build();
+            } else {
+                response = ResponseVo.builder()
+                        .code(NO_EXIST_CHANNEL.getCode())
+                        .message(NO_EXIST_CHANNEL.getMessage())
+                        .build();
+            }
+        } catch (JsonProcessingException exception) {
+            response = ResponseVo.builder()
+                    .code(JSON_PARSE_ERROR.getCode())
+                    .message(JSON_PARSE_ERROR.getMessage())
+                    .build();
+        }
+
+        return response;
     }
 
     @Transactional
